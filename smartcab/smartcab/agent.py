@@ -47,7 +47,7 @@ class LearningAgent(Agent):
             self.train_trial_idx += 1
             #self.epsilon = self.epsilon - 0.05
             self.epsilon = math.exp(-0.05*self.train_trial_idx)
-
+            
         return None
 
     def build_state(self):
@@ -70,7 +70,7 @@ class LearningAgent(Agent):
         
         state = (waypoint, inputs['light'],
                  inputs['left'] is None, inputs['left'] == 'forward', inputs['left'] == 'right',
-                 inputs['oncoming'] == 'forward', inputs['oncoming'] == 'left', inputs['oncoming'] is None )
+                 inputs['oncoming'] is None, inputs['oncoming'] == 'forward', inputs['oncoming'] == 'left' )
 
         if self.learning:
             self.createQ(state)
@@ -222,7 +222,7 @@ def run():
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10, tolerance=0.005)
+    sim.run(n_test=50, tolerance=4.4e-05)
     #sim.run(n_test=10)
 
 
