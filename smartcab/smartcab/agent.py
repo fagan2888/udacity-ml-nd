@@ -156,8 +156,6 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        # NOTE : 'state' passed is the previous state and we need to get the current state
-        # from self.build_state()
         if self.learning:
             Qt = self.Q[state][action]
             Qtp1 = ( (1.0-self.alpha)*Qt + (self.alpha*reward) )
