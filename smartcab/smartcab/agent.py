@@ -159,7 +159,6 @@ class LearningAgent(Agent):
         # NOTE : 'state' passed is the previous state and we need to get the current state
         # from self.build_state()
         if self.learning:
-            current_state = self.build_state()
             Qt = self.Q[state][action]
             Qtp1 = ( (1.0-self.alpha)*Qt + (self.alpha*reward) )
             self.Q[state][action] = Qtp1
