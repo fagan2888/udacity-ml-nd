@@ -44,6 +44,7 @@ class StockTimeSeriesExplorer(object):
             return
         df1 = self.df.ix[:,self.features + ['Adj Close']]
         axs = df1.hist(color='k', alpha=0.5, bins=100, figsize=(12, 12))
+        plt.suptitle('Histograms of all features of %s stock' % self.ticker, fontsize=16)
 
     def show_timeseries_plots(self):
         if not self.fileloaded:
