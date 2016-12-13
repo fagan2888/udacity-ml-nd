@@ -4,8 +4,9 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from genfeatures import GenStockFeatures
 
-class PriceTimeSeries(object):
+class StockTimeSeriesExplorer(object):
     """ Reads a single stock's time-series and visualize its statistics """
     def __init__(self, ticker, window=5):
         self.ticker = ticker
@@ -21,7 +22,7 @@ class PriceTimeSeries(object):
         self.df = self.df.reindex(index=self.df.index[::-1])
         self.fileloaded = True
         self.hasfeatures = False
-        self.features = ['Volume']
+        self.features = []
 
     def print_basic_stats(self):
         if not self.fileloaded:
@@ -34,14 +35,8 @@ class PriceTimeSeries(object):
     def generate_features(self):
         if ( not self.fileloaded ) or self.hasfeatures:
             return
-        self.df['SMA'] = self.df['Adj Close'].rolling(window=self.window, center=False).mean()
-        self.df['RSD'] = self.df['Adj Close'].rolling(window=self.window, center=False).std()
-        self.df['BB']  = (self.df['Adj Close'] - self.df['SMA']) / ( 2*self.df['RSD'] )
-        self.df['MOM'] = self.df['Adj Close']/self.df['Adj Close'].shift(self.window)
-        self.df['Volume'] = np.log(self.df['Volume'])
-        # remove the oldest three rows due to NaN in moving stats columns
-        #self.df = self.df.drop(['2006-01-03', '2006-01-04', '2006-01-05'])
-        self.features.extend(('SMA', 'RSD', 'BB', 'MOM'))
+        self.features.extend(('SMA', 'RSD', 'BB', 'MOM', 'LogVolume'))
+        self.df = GenStockFeatures().generate_features(dataframe=self.df, feature_names=self.features, windowsize=self.window)
         self.hasfeatures = True
 
     def show_histograms(self):
@@ -54,14 +49,15 @@ class PriceTimeSeries(object):
         dftmp = self.df.ix[0:300,self.features + ['Adj Close']]
         dftmp = normalize(dftmp)
         print dftmp.head()
-        fig, axes = plt.subplots(nrows=3, ncols=1)
+        fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10,10))
         #print axes
         ax = dftmp[['Adj Close', 'SMA', 'RSD']].plot(ax = axes[0], title='Adjusted close/SMA/RSD')
         ax.grid(True)
         ax = dftmp[['Adj Close', 'BB', 'MOM']].plot(ax = axes[1], title='Adjusted close/BBscore/MomentumScore')
         ax.grid(True)
-        ax = dftmp[['Adj Close', 'Volume']].plot(ax = axes[2], title='Adjusted close/Log-Volume')
+        ax = dftmp[['Adj Close', 'LogVolume']].plot(ax = axes[2], title='Adjusted close/Log-Volume')
         ax.grid(True)
+        plt.subplots_adjust(hspace=0.6)
 
     def run(self):
         self.print_basic_stats()
@@ -73,7 +69,7 @@ def normalize(df):
     return (df - df.mean())/df.std()
 
 if __name__ == '__main__':
-    PriceTimeSeries(ticker='GOOG').run()
+    StockTimeSeriesExplorer(ticker='GOOG').run()
     plt.show()
         
         
