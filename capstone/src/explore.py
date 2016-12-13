@@ -46,16 +46,18 @@ class StockTimeSeriesExplorer(object):
         axs = df1.hist(color='k', alpha=0.5, bins=100, figsize=(12, 12))
 
     def show_timeseries_plots(self):
+        if not self.fileloaded:
+            return
         dftmp = self.df.ix[0:300,self.features + ['Adj Close']]
         dftmp = normalize(dftmp)
         print dftmp.head()
         fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10,10))
         #print axes
-        ax = dftmp[['Adj Close', 'SMA', 'RSD']].plot(ax = axes[0], title='Adjusted close/SMA/RSD')
+        ax = dftmp[['Adj Close', 'SMA', 'RSD']].plot(ax = axes[0], title='Adjusted close/SMA/RSD of ' + self.ticker)
         ax.grid(True)
-        ax = dftmp[['Adj Close', 'BB', 'MOM']].plot(ax = axes[1], title='Adjusted close/BBscore/MomentumScore')
+        ax = dftmp[['Adj Close', 'BB', 'MOM']].plot(ax = axes[1], title='Adjusted close/BBscore/MomentumScore of ' + self.ticker)
         ax.grid(True)
-        ax = dftmp[['Adj Close', 'LogVolume']].plot(ax = axes[2], title='Adjusted close/Log-Volume')
+        ax = dftmp[['Adj Close', 'LogVolume']].plot(ax = axes[2], title='Adjusted close/Log-Volume of ' + self.ticker)
         ax.grid(True)
         plt.subplots_adjust(hspace=0.6)
 
