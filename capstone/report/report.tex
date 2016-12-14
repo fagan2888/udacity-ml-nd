@@ -78,7 +78,8 @@ Since there are N stocks and the model needs to output 5 continuous valued real 
 \text{Validation set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{vald}, \hat{Y}_{i,j}^{vald}\right)\\
 \text{Test set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{test}, \hat{Y}_{i,j}^{test}\right)
 \end{align*}
-where $Y_{i,j}^{vald}$ and $\hat{Y}_{i,j}^{vald}$ are the actual and predicted adjusted-close price respectively for $i^{th}$ stock on the day T+j where T is the supposed current date.
+where $Y_{i,j}^{vald}$ and $\hat{Y}_{i,j}^{vald}$ are the actual and predicted adjusted-close price respectively in the validation set for $i^{th}$ stock on the day T+j where T is the supposed current date
+and similarly $Y_{i,j}^{test}$ and $\hat{Y}_{i,j}^{test}$ are the actual and predicted adjusted-close price respectively in the test set for $i^{th}$ stock on the day T+j.
 
 \section{Analysis}
 
