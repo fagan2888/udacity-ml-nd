@@ -2,6 +2,16 @@
 \renewcommand{\thesection}{\Roman{section}} 
 \renewcommand{\thesubsection}{\thesection.\Roman{subsection}}
 
+\renewcommand{\baselinestretch}{1.5}
+
+\setlength{\topmargin}{-2cm}
+\setlength{\oddsidemargin}{0cm}
+\setlength{\textheight}{24cm}
+\setlength{\textwidth}{16cm}
+
+\usepackage{amsmath}
+\usepackage{bm}
+
 \begin{document}
 
 \title{%
@@ -12,6 +22,49 @@
 \maketitle
 
 \section{Definition}
+\subsection*{Project Overview}
+Stock price prediction is a very basic and important operation in financial entities like hedge funds, mutual funds and exchange traded funds. Performance of these financial institutions depend highly on the degree of success of this prediction. Many works in the past have used machine learning techniques like Linear Discriminant Analysis(LDA), K-nearest neighbor(KNN), Gaussian Process, Support Vector Machines(SVM), Neural Networks(ANN), Random Forest and Naive Bayes\cite{Ou2009}\cite{Patel2015}. In this project a blend of two instances of Adaboost ensemble regressor with Linear regression and KNN as base regressors is used to train on daily prices/volume data for a selected number of stocks of S\&P 500\cite{sp500} index obtained from Yahoo Finance. The final model is then used to make a 5-day forecast of the adjusted close prices\cite{adjclose} of the selected stocks.
+
+\subsection*{Problem Statement}
+The goal is to make a 5-day forecast of adjusted-close prices\cite{adjclose} of N current stocks of S\&P 500 index which were first added before 2006-01-01 purely based on Technical Analysis features like past m day’s Adjusted close prices, Simple Moving Average(SMA), Rolling Standard Deviation(RSD), Bollinger-Bands(BB)\cite{bollingerbands} and Momentum of the adjusted close prices and also based on the daily Volume of each stock. Mathematically the aim can be written as :\\
+Estimate the functions $F_i$ $\forall i \in [0,N-1]$ such that\\
+\begin{align*}
+\bm{P^{forecast}_{i}} &= \bm{F_i}(\bm{P_i}, \bm{SMA_i}, \bm{RSD_i}, \bm{BBScore_i}, \bm{MScore_i},\bm{ Volume_i})\\
+\text{where}\\
+\bm{P^{forecast}_{i}} &= [ P_{i, t+1}, P_{i, t+2}, P_{i, t+3}, P_{i, t+4}, P_{i, t+5} ] \\
+\bm{P_i} &= [ P_{i, t}, P_{i, t-1}, ..., P_{i, t-m+1} ] \\
+\bm{SMA_i} &= [ SMA_{i, t}, SMA_{i, t-1}, ..., SMA_{i, t-m+1} ]\\
+\bm{RSD_i} &= [ RSD_{i, t}, RSD_{i, t-1}, ..., RSD_{i, t-m+1} ]\\
+\bm{BBScore_i} &= [ BBScore_{i, t}, BBScore_{i, t-1}, ..., BBScore_{i, t-m+1} ]\\
+\bm{MScore_i} &= [ MScore_{i, t}, MScore_{i, t-1}, ..., MScore_{i, t-m+1} ]\\
+\bm{Volume_i} &= [ Volume_{i, t}, Volume_{i, t-1}, ..., Volume_{i, t-m+1} ]
+\end{align*}
+$P_{i,t}$ is the $t^{th}$ day's adjusted-close price of $i^{th}$ stock from the N selected stocks of current S\&P 500 index sorted alphabetically by ticker.\\
+$SMA_{i,t}$ is given by $\frac{1}{10}\sum_{j=t-9}^{t} P_{i,j}$ which is the 10 day simple moving average of the $i^{th}$ stock.\\
+$RSD_{i,t}$ is given by $\sqrt{\frac{1}{10}\sum_{j=t-9}^{t} \left( P_{i,j} - SMA_{i,j}\right)^2}$ which is the 10 day rolling standard deviation of the $i^{th}$ stock.\\
+$BBScore_{i,t}$ is given by $\frac{P_{i,t} - SMA_{i,t}}{2 RSD_{i,t}}$ which is the Bollinger bands score of $i^{th}$ stock as introduced in \cite{mlfortrading} \\
+$MScore_{i,t}$ is given by $\frac{P_{i,t}}{P_{i, t-9}}$ which is the momentum score for $i^{th}$ stock as introduced in \cite{mlfortrading}\\
+$Volume_{i,t}$ is the $t^{th}$ day's volume of the $i^{th}$ stock.\\
+\\
+The tasks involved in the solution are as follows:
+\begin{enumerate}
+\item Retrieve the list of tickers in current S\&P 500 index filter out those which stocks which got added after 2006-01-01
+\item Get the historical price-volume data in the range [2006-01-01 to 2016-12-10] for each of the selected tickers from Yahoo Finance webservice.
+\item Reshape the downloaded data to form a dataset of the form: 
+\begin{align*}
+[&(feature_1, feature_2, ..., feature_n, target)_{t=0},\\
+ &(feature_1, feature_2, ..., feature_n, target)_{t=1},\\
+ &...\\
+ &(feature_1, feature_2, ..., feature_n, target)_{t=S}]\\
+\end{align*} where S is the number of points in the dataset.
+\item Split the dataset to train set, validation set and test set in the proportion 80:10:10 such that train set has the oldest 80\% of dataset w.r.t date, and validation set has next 10\% and test set has the final/newest 10\% of the dataset. This is to avoid any look-ahead bias in the model that is going to be trained and tuned.
+\item Train a regressor model on the train set and tune the parameters of the model using the validation set.
+\item Train the model using combined train + validation set using the best parameters obtained in previous step.
+\item Use the above model to evaluate in the test set.
+\end{enumerate}
+The model thus produced is hopefully useful in making reasonable future 5-day predictions in real-time.
+
+\subsection*{Metrics}
 
 \section{Analysis}
 
@@ -20,5 +73,24 @@
 \section{Results}
 
 \section{Conclusion}
+
+\begin{thebibliography}{}
+
+\bibitem{Ou2009}
+Ou, Phichhang, and Hengshan Wang. "Prediction of stock market index movement by ten data mining techniques." Modern Applied Science 3.12 (2009): 28
+\bibitem{Patel2015}
+Patel, Jigar, et al. "Predicting stock and stock price index movement using trend deterministic data preparation and machine learning techniques.” Expert Systems with Applications 42.1 (2015): 259-268
+\bibitem{adjclose}
+Adjusted close price - www.investopedia.com/terms/a/adjusted\_closing\_price.asp
+\bibitem{bollingerbands}
+Bollinger bands - en.wikipedia.org/wiki/Bollinger\_Bands
+\bibitem{mlfortrading}
+Machine Learning for Trading Course by Udacity - www.udacity.com/course/machine-learning-for-trading--ud501
+\bibitem{sp500}
+S\&P500 constituents - en.wikipedia.org/wiki/List\_of\_S\%26P\_500\_companies
+\bibitem{r2score}
+R2 score - scikit-learn.org/stable/modules/model\_evaluation.html\#r2-score
+
+\end{thebibliography}
 
 \end{document}
