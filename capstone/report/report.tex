@@ -62,11 +62,26 @@ The tasks involved in the solution are as follows:
 \item Train the model using combined train + validation set using the best parameters obtained in previous step.
 \item Use the above model to evaluate in the test set.
 \end{enumerate}
-The model thus produced is hopefully useful in making reasonable future 5-day predictions in real-time.
+The model thus produced is expected to be useful in making reasonably accurate future 5-day predictions.
 
 \subsection*{Metrics}
+A suitable evaluation metric for the project is $R^2$ score or coefficient of determination\cite{r2score} since it is a regression problem. It reflects how well future samples are likely to be predicted by the
+model. It produces a score in the range $(-\infty, 1]$. $R^2$ score = 1 indicate best performance and those closer to zero and below indicate poor performance. A model that just returns the mean of target variables as output will have $R^2$ score = 0. $R^2$ evaluation metric takes estimated target sample vector $\hat{Y}$ and corresponding ground truths vector Y each of length M and computes the score as :\\
+\\
+$R^2\left(Y, \hat{Y}\right) = 1 - \frac{\displaystyle\sum_{k=0}^{M-1} \left(Y_k - \hat{Y}_k\right)^2}{\displaystyle\sum_{k=0}^{M-1} \left(Y_k - \bar{Y}\right)^2}$\\
+where\\
+$\bar{Y} = \frac{1}{M} \displaystyle\sum_{k=0}^{M-1} Y_k$
+\\
+\\
+Since there are N stocks and the model needs to output 5 continuous valued real numbers (5-day forecasts) per each stock, the model would consist of $5 \times N$ regressors, hence when $R^2$ evaluation metric is used to evaluate each regressor individually, there would be $5 \times N$ $R^2$ values. As it is always easier to work with a single performance metric, the individual $R^2$ scores are averaged with equal weightage :\\
+\begin{align*}
+\text{Validation set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{vald}, \hat{Y}_{i,j}^{vald}\right)\\
+\text{Test set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{test}, \hat{Y}_{i,j}^{test}\right)
+\end{align*}
+where $Y_{i,j}^{vald}$ and $\hat{Y}_{i,j}^{vald}$ are the actual and predicted adjusted-close price respectively for $i^{th}$ stock on the day T+j where T is the supposed current date.
 
 \section{Analysis}
+
 
 \section{Methodology}
 
