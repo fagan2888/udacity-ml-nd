@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 import numpy as np
+import pandas as pd
+import os
+import gzpickle
 
 class GenStockFeatures(object):
     """ Create basic features into price-volume dataframe of a stock """
@@ -30,3 +33,89 @@ class GenStockFeatures(object):
         if ('SMA' in featset) or ('RSD' in featset) or ('MOM' in featset):
             dataframe = dataframe.iloc[windowsize:,:]
         return dataframe
+
+class SingleStockDataSet(object):
+    """ Loads a single stock's raw price-volume file and generates
+        a dataset of the form { (x1, y1), (x2, y2),... } ready for
+        application of a regressor
+        window is the num days of look back to calculate rolling measures
+        m is the num days look back for prediction of p future days"""
+    def __init__(self, ticker, window=10, m=5, p=5):
+        badtickers = {'NEE' : True, 'WRK' : True, 'SE' : True, 'WU' : True, 'WYN' : True}
+        if ticker in badtickers:
+            print 'Cannot do ticker %s' % ticker
+            return
+        self.ticker = ticker
+        self.window = window
+        self.m = m
+        self.p = p
+        self.datafile = "../data/" + self.ticker + ".csv"
+        self.pklfile = "../data/pkl/" + self.ticker + ".pkl.gz"
+        self.fileloaded = False
+        if not os.path.exists(self.datafile):
+            print "Error : Cannot find data file %s" % self.datafile
+            return
+        self.formed_dataset = False
+        if not os.path.exists(self.pklfile):
+            self.__genXY__()
+        else:
+            print 'Reading from pklfile = %s' % self.pklfile
+            self.X, self.Y = gzpickle.load( self.pklfile )
+            self.formed_dataset = True
+
+    def __genXY__(self):
+        self.df = pd.read_csv(self.datafile)
+        # order the rows from oldest to newest
+        self.df.set_index(self.df['Date'], inplace=True)
+        self.df = self.df.reindex(index=self.df.index[::-1])
+
+        self.features = ['Adj Close', 'SMA', 'RSD', 'BB', 'MOM', 'LogVolume']
+        column_bases = ['ac', 'sma', 'rsd', 'bb', 'mom', 'vol']
+        # Generate col names for features : ex: ac_tm3 means Adjusted close at T-3
+        self.column_names = [ base + "_tm" + str(suff) for suff in xrange(0, self.m) for base in column_bases ]
+        self.df = GenStockFeatures().generate_features(self.df, self.features, windowsize=self.window)
+        self.hasfeatures = True
+        self.S = self.df.shape[0]
+        if self.S - self.m + 1 - self.p < 2000:
+            print 'Size of the raw dataset too low, not generating dataset'
+            return
+        self.X = pd.DataFrame(index=self.df.index[self.m-1:self.S-self.p], columns=self.column_names)
+        # To store targets : Adjusted close at T+1, Adjusted close at T+2, ... Adjusted close at T+5
+        self.Y = pd.DataFrame(index=self.df.index[self.m-1:self.S-self.p], columns=('ac_tp1', 'ac_tp2', 'ac_tp3', 'ac_tp4', 'ac_tp5'))
+        for idx in xrange(self.m-1, self.S-self.p):
+            newidx = idx - self.m + 1
+            row = [ self.df.loc[self.df.index[subidx], feat] for subidx in xrange(idx,idx-self.m, -1) for feat in self.features ]
+            self.X.iloc[newidx] = row
+            self.Y.iloc[newidx] = [ self.df.loc[self.df.index[subidx], 'Adj Close'] for subidx in xrange(idx+1, idx+self.p+1) ]
+        self.formed_dataset = True
+        # release df
+        self.df = None
+        if not os.path.exists('../data/pkl'):
+            os.makedirs('../data/pkl')
+        gzpickle.save([self.X, self.Y], self.pklfile)
+        print 'Wrote X and Y to %s' % self.pklfile
+
+    def get_train_val_test_sets(self, train_pct=0.8, val_pct=0.1, test_pct=0.1):
+        """ returns (Xtrain, Xval, Xtest, Ytrain, Yval, Ytest)"""
+        if not self.formed_dataset:
+            print "Error : The dataset was not formed !! Cannot continue !!"
+            return
+        if train_pct < 0.0 or val_pct < 0.0 or test_pct < 0.0:
+            print "Error : parameters must be positive"
+            return
+        if train_pct + val_pct + test_pct > 1.0:
+            print "Error : train_pct + val_pct + test_pct > 1.0"
+            return
+        if train_pct == 0.0 or test_pct == 0.0:
+            print "Error : None of train_pct or test_pct can be zero"
+            return
+        sz = self.X.shape[0]
+        train_end = int(round(train_pct*sz) - 1)
+        val_end = train_end+1
+        if val_pct != 0.0:
+            val_end = int(train_end + 1 + round(val_pct*sz) - 1)
+        if val_end == train_end+1:
+            return self.X.iloc[0:train_end+1,:], None, self.X.iloc[train_end+1:,:], self.Y.iloc[0:train_end+1,:], None, self.Y.iloc[train_end+1:,:]
+        return self.X.iloc[0:train_end+1, :], self.X.iloc[train_end+1:val_end+1, :], self.X.iloc[val_end+1:, :], \
+            self.Y.iloc[0:train_end+1, :], self.Y.iloc[train_end+1:val_end+1, :], self.Y.iloc[val_end+1:, :]
+
