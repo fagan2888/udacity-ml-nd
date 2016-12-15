@@ -11,6 +11,9 @@
 
 \usepackage{amsmath}
 \usepackage{bm}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{graphicx}
 
 \begin{document}
 
@@ -82,7 +85,66 @@ where $Y_{i,j}^{vald}$ and $\hat{Y}_{i,j}^{vald}$ are the actual and predicted a
 and similarly $Y_{i,j}^{test}$ and $\hat{Y}_{i,j}^{test}$ are the actual and predicted adjusted-close price respectively in the test set for $i^{th}$ stock on the day T+j.
 
 \section{Analysis}
-
+\subsection*{Data Exploration}
+First step in getting data is to parse the wikipedia webpage\cite{sp500} to get a list of tickers that were first added before 2006-01-01. Next step is to use the Yahoo Finance webservice to get historical prices and volume for each of the selected tickers from 2006-01-01 to 2016-12-10. Whole of this process can be done by invoking the script fetchdata.py as :\\
+\texttt{\$ cd src\\
+\$ python fetchdata.py}\\
+Historical data for each ticker is downloaded to \texttt{data/} dir as a csv file. There are 2755 trading days between 2006-01-01 and 2016-12-10, so those stocks which have traded for all these days will have 2755 rows in them. For example AAPL.csv has 2755 data rows excluding the header. However there are tickers that have lesser number of rows :\\
+\texttt{\$ wc -l *.csv | sort -n  | head\\
+     130 NEE.csv\\
+     372 WRK.csv\\
+    2505 SE.csv\\
+    2568 WU.csv\\
+    2620 WYN.csv\\
+    2756 AAPL.csv\\
+    2756 ABC.csv\\
+    2756 ABT.csv\\
+    2756 A.csv\\
+    2756 ADBE.csv}\\
+These tickers [\textbf{NEE, WRK, SE, WU, WYN}] are excluded from further use in the project. The number of stocks after exclusion of these stocks is 308.
+Every csv file has the columns [Date, Open, High, Low, Close, Volume, Adj Close], from this only the columns Date, Volume and Adj Close are used in the project to compute features/targets and none of the columns has missing values for any stock.
+The following steps are done to these selected columns to get the needed features :
+\begin{enumerate}
+\item Sort the raw data with respect to Date column in ascending order(oldest date to newest date).
+\item Compute the features [SMA, RSD, BBScore, MScore] as described in the problem statement section.
+\item Compute natural logarithm of the Volume field as Volume is typically a large positive number. Taking log will make its distribution approximately normal.
+\end{enumerate}
+\textbf{Table. 1} Table showing the basic statistics of the relevant features for AAPL stock.\\
+\csvautobooktabular{AAPL_desc.csv}
+\\
+\\
+Note that the count of all the features is only 2745, that is because oldest 10 rows will not have SMA, RSD and MScore values as they are rolling features which look back 10 days.\\
+Next step is to form a dataset in the form ([set of features], target). A single row in this dataset for each date for a particular stock has the features :
+\begin{enumerate}
+\item Adj Close for past $m=5$ days including current date i.e the date of dataset row.
+\item SMA for past $m=5$ days including current date.
+\item RSD for past $m=5$ days including current date.
+\item BBScore for past $m=5$ days including current date.
+\item MScore for past $m=5$ days including current date.
+\item LogVolume for past $m=5$ days including current date.
+\end{enumerate}
+The target for each row is the vector of next 5 day's adjusted close prices. Number of rows in the dataset is $2736$ because of  5-day look back for computing features including current day and 5-day forecast. Number of features in each example is $6 \times 5 = 30$ and the number of targets per each example is $5$. The amount of memory required to load the dataset assuming 8-bytes for a floating point number is $ 308 \times 2736 \times ( 30  +  5 ) \times 8 = 235,952,640 \text{ Bytes} \approx 225.02 \text{ MB}$. So the whole dataset can be loaded in memory for any modern machine.
+\subsection*{Exploratory Visualization}
+The exploratory visualization of a particular stock can be seen by invoking the \texttt{explore.py} script as :\\
+\texttt{\$ cd src\\
+\$ python explore.py}\\
+It produces the histogram plots of all features used and also the variation of all normalized features as a function of date.\\
+\textbf{Fig.1} Set of histograms of the features Adjusted-Close price(Adj Close), Bollinger Bands score(BB), Natural logarithm of volume (LogVolume), Momentum score(MOM), Rolling standard deviation(RSD), Simple moving average(SMA). Adj Close and SMA have similar histograms as expected. MOM has an approximate normal distribution with $mean = 1.0$ BB's histogram indicate a dominant positive mode indicating frequent price movements above SMA. RSD has an approximate lognormal distribution\\
+\includegraphics[width=11cm]{plots/histograms.png}\\
+\textbf{Fig.2} Set of plots showing the timeseries of normalized features for AAPL stock with date range [2006-01-18 to 2007-03-28]. Top plot indicate the timeseries of normalized Adjusted close price, SMA and RSD. Middle plot shows timeseries of Adjusted close, BBscore, MScore and the bottom plot shows the timeseries of Adj Close and LogVolume.\\
+\includegraphics[width=12cm]{plots/allplots.png}\\
+It can be seen from the first timeseries plot that SMA is a smoother version of the adjusted close price and lags a bit behind it. RSD value becomes high whenever there is a large instantaneous variation in adj close from SMA. Momentum score(MOM) shows that often when it is very high the immediate future prices are going to go up and very low values of MOM indicate a immediate future price drop. Volume time series shows that it goes up usually due to a large variation of price in a small time window. Generally visual inferences from timeseries plots are difficult apart from some very obvious cues in price movements. Next, correlation of different features with the future prices are examined to get a more clear view although, correlation uncovers only the degree of linear relationship between variables.\\
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+\textbf{Fig.3} Set of bar plots showing the Pearson correlation coefficient of targets Adjusted close(T+1, T+2, T+3, T+4, T+5) with all features.\\
+\includegraphics[width=12cm]{plots/corrcoeffs.png}\\
+It can be easily noted that there is high positive correlation between previous days adjusted close price, and SMA with future adjusted close prices. There is moderate positive correlation between RSD and targets and LogVolume has high negative correlation with targets. Since correlation-measure indicates the degree of linear relationship between variables, a simple Linear Regression would be able to take advantage of these relationships to do prediction. Even though the the correlation coefficient of BBScore and MScore with targets are very low, a nonlinear regressor may be able to make use of these features to make predictions better than the linear models.
 
 \section{Methodology}
 
