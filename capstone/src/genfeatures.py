@@ -87,6 +87,9 @@ class SingleStockDataSet(object):
             row = [ self.df.loc[self.df.index[subidx], feat] for subidx in xrange(idx,idx-self.m, -1) for feat in self.features ]
             self.X.iloc[newidx] = row
             self.Y.iloc[newidx] = [ self.df.loc[self.df.index[subidx], 'Adj Close'] for subidx in xrange(idx+1, idx+self.p+1) ]
+            # For target = (P_tpx / P_tm0) -1
+            #curr_ac = self.X.iloc[newidx]['ac_tm0']
+            #self.Y.iloc[newidx] = [ (self.df.loc[self.df.index[subidx], 'Adj Close']/curr_ac) - 1 for subidx in xrange(idx+1, idx+self.p+1) ]
         self.formed_dataset = True
         # release df
         self.df = None
