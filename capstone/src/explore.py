@@ -108,9 +108,9 @@ class StockTimeSeriesExplorer(object):
 
     def run(self):
         self.generate_features()
-        #self.print_basic_stats()
-        #self.show_timeseries_plots()
-        #self.show_histograms()
+        self.print_basic_stats()
+        self.show_timeseries_plots()
+        self.show_histograms()
         self.show_feature_correlation_with_target()
 
 def normalize(df):
