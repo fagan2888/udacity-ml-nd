@@ -11,7 +11,7 @@ class BenchMarkModel(object):
         self.dset = dset
         self.trainX, _, self.testX, self.trainY, _, self.testY = self.dset.get_train_val_test_sets(0.9, 0.0, 0.1)
         self.predictions = None
-        self.regressor = LinearRegression()
+        self.regressor = LinearRegression(normalize=True)
 
     def fit(self):
         self.regressor.fit(self.trainX, self.trainY)
