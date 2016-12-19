@@ -26,15 +26,15 @@
 
 \section{Definition}
 \subsection*{Project Overview}
-Stock price prediction is a very basic and important operation in financial entities like hedge funds, mutual funds and exchange traded funds. Performance of these financial institutions depend highly on the degree of success of this prediction. Many works in the past have used machine learning techniques like Linear Discriminant Analysis(LDA), K-nearest neighbor(KNN), Gaussian Process, Support Vector Machines(SVM), Neural Networks(ANN), Random Forest and Naive Bayes\cite{Ou2009}\cite{Patel2015}. In this project a blend of two instances of Adaboost ensemble regression with Linear regression and KNN as base algorithms is used to train on daily prices/volume data for a selected number of stocks of S\&P 500\cite{sp500} index obtained from Yahoo Finance. The final model is then used to make a 5-day forecast of the adjusted close prices\cite{adjclose} of the selected stocks.
+Stock price prediction is a very basic and important operation in financial entities like hedge funds, mutual funds and exchange traded funds. Performance of these financial institutions depend highly on the degree of success of this prediction. Many works in the past have used machine learning techniques like Linear Discriminant Analysis(LDA), K-nearest neighbor(KNN), Gaussian Process, Support Vector Machines(SVM), Neural Networks(ANN), Random Forest and Naive Bayes\cite{Ou2009}\cite{Patel2015}. In this project a blend of two instances of Adaboost ensemble regression with Linear regression and KNN as base algorithms is used to train on daily prices/volume data for a selected number of stocks of S\&P 500\cite{sp500} index obtained from Yahoo Finance. The final model is then used to make a 5-day forecast of returns of the selected stocks.
 
 \subsection*{Problem Statement}
-The goal is to make a 5-day forecast of adjusted-close prices\cite{adjclose} of N current stocks of S\&P 500 index which were first added before 2006-01-01 purely based on Technical Analysis features like past m day’s Adjusted close prices, Simple Moving Average(SMA), Rolling Standard Deviation(RSD), Bollinger-Bands(BB)\cite{bollingerbands} and Momentum of the adjusted close prices and also based on the daily Volume of each stock. Mathematically the aim can be written as :\\
+The goal is to make a 5-day forecast of returns of N current stocks of S\&P 500 index which were first added before 2006-01-01 purely based on Technical Analysis features like past m day’s Adjusted close prices, Simple Moving Average(SMA), Rolling Standard Deviation(RSD), Bollinger-Bands(BB)\cite{bollingerbands} and Momentum of the adjusted close prices and also based on the daily Volume of each stock. Mathematically the aim can be written as :\\
 Estimate the functions $F_i$ $\forall i \in [0,N-1]$ such that\\
 \begin{align*}
-\bm{P^{forecast}_{i}} &= \bm{F_i}(\bm{P_i}, \bm{SMA_i}, \bm{RSD_i}, \bm{BBScore_i}, \bm{MScore_i},\bm{ Volume_i})\\
+\bm{R^{forecast}_{i}} &= \bm{F_i}(\bm{P_i}, \bm{SMA_i}, \bm{RSD_i}, \bm{BBScore_i}, \bm{MScore_i},\bm{ Volume_i})\\
 \text{where}\\
-\bm{P^{forecast}_{i}} &= [ P_{i, t+1}, P_{i, t+2}, P_{i, t+3}, P_{i, t+4}, P_{i, t+5} ] \\
+\bm{R^{forecast}_{i}} &= [ \frac{P_{i, t+1}}{P_{i, t}} - 1, \frac{P_{i, t+2}}{P_{i, t}} - 1, \frac{P_{i, t+3}}{P_{i, t}} - 1, \frac{P_{i, t+4}}{P_{i, t}} - 1, \frac{P_{i, t+5}}{P_{i, t}} - 1] \\
 \bm{P_i} &= [ P_{i, t}, P_{i, t-1}, ..., P_{i, t-m+1} ] \\
 \bm{SMA_i} &= [ SMA_{i, t}, SMA_{i, t-1}, ..., SMA_{i, t-m+1} ]\\
 \bm{RSD_i} &= [ RSD_{i, t}, RSD_{i, t-1}, ..., RSD_{i, t-m+1} ]\\
@@ -42,7 +42,7 @@ Estimate the functions $F_i$ $\forall i \in [0,N-1]$ such that\\
 \bm{MScore_i} &= [ MScore_{i, t}, MScore_{i, t-1}, ..., MScore_{i, t-m+1} ]\\
 \bm{Volume_i} &= [ Volume_{i, t}, Volume_{i, t-1}, ..., Volume_{i, t-m+1} ]
 \end{align*}
-$P_{i,t}$ is the $t^{th}$ day's adjusted-close price of $i^{th}$ stock from the N selected stocks of current S\&P 500 index sorted alphabetically by ticker.\\
+$P_{i,t}$ is the $t^{th}$ day's adjusted-close\cite{adjclose} price of $i^{th}$ stock from the N selected stocks of current S\&P 500 index sorted alphabetically by ticker.\\
 $SMA_{i,t}$ is given by $\frac{1}{10}\sum_{j=t-9}^{t} P_{i,j}$ which is the 10 day simple moving average of the $i^{th}$ stock.\\
 $RSD_{i,t}$ is given by $\sqrt{\frac{1}{10}\sum_{j=t-9}^{t} \left( P_{i,j} - SMA_{i,j}\right)^2}$ which is the 10 day rolling standard deviation of the $i^{th}$ stock.\\
 $BBScore_{i,t}$ is given by $\frac{P_{i,t} - SMA_{i,t}}{2 RSD_{i,t}}$ which is the Bollinger bands score of $i^{th}$ stock as introduced in \cite{mlfortrading} \\
@@ -81,8 +81,8 @@ Since there are N stocks and the model needs to output 5 continuous valued real 
 \text{Validation set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{valid}, \hat{Y}_{i,j}^{valid}\right)\\
 \text{Test set performance metric} &= \frac{1}{5N} \displaystyle\sum_{i=0}^{N-1} \displaystyle\sum_{j=1}^{5} R^2\left(Y_{i,j}^{test}, \hat{Y}_{i,j}^{test}\right)
 \end{align*}
-where $Y_{i,j}^{valid}$ and $\hat{Y}_{i,j}^{valid}$ are the actual and predicted adjusted-close price respectively in the validation set for $i^{th}$ stock on the day T+j where T is the supposed current date
-and similarly $Y_{i,j}^{test}$ and $\hat{Y}_{i,j}^{test}$ are the actual and predicted adjusted-close price respectively in the test set for $i^{th}$ stock on the day T+j.
+where $Y_{i,j}^{valid}$ and $\hat{Y}_{i,j}^{valid}$ are the actual and predicted returns respectively in the validation set for $i^{th}$ stock on the day T+j where T is the supposed current date
+and similarly $Y_{i,j}^{test}$ and $\hat{Y}_{i,j}^{test}$ are the actual and predicted returns respectively in the test set for $i^{th}$ stock on the day T+j.
 
 \section{Analysis}
 \subsection*{Data Exploration}
@@ -114,7 +114,32 @@ The following steps are done to these selected columns to get the needed feature
 \\
 \\
 Note that the count of all the features is only 2745, that is because oldest 10 rows will not have SMA, RSD and MScore values as they are rolling features which look back 10 days.\\
-Next step is to form a dataset in the form ([set of features], target). A single row in this dataset for each date for a particular stock has the features :
+\subsection*{Exploratory Visualization}
+The exploratory visualization of a particular stock can be seen by invoking the \texttt{explore.py} script as :\\
+\texttt{\$ cd src\\
+\$ python explore.py}\\
+It produces the histogram plots of all features used and also the variation of all normalized features as a function of date.\\
+\textbf{Fig.1} Set of histograms of the features Adjusted-Close price(Adj Close), Bollinger Bands score(BB), Natural logarithm of volume (LogVolume), Momentum score(MOM), Rolling standard deviation(RSD), Simple moving average(SMA). Adj Close and SMA have similar histograms as expected. MOM has an approximate normal distribution with $mean = 1.0$ BB's histogram indicate a dominant positive mode indicating frequent price movements above SMA. RSD has an approximate lognormal distribution.\\
+\includegraphics[width=11cm]{plots/histograms.png}\\
+\textbf{Fig.2} Set of plots showing the timeseries of normalized features for AAPL stock with date range [2006-01-18 to 2007-03-28]. Top plot indicate the timeseries of normalized Adjusted close price, SMA and RSD. Middle plot shows timeseries of Adjusted close, BBscore, MScore and the bottom plot shows the timeseries of Adj Close and LogVolume.\\
+\includegraphics[width=12cm]{plots/allplots.png}\\
+It can be seen from the first timeseries plot that SMA is a smoother version of the adjusted close price and lags a bit behind it. RSD value becomes high whenever there is a large instantaneous variation in adj close from SMA. Momentum score(MOM) shows that often when it is very high the immediate future prices are going to go up and very low values of MOM indicate a immediate future price drop. Volume time series shows that it goes up usually due to a large variation of price in a small time window. Generally visual inferences from timeseries plots are difficult apart from some very obvious cues in price movements. Next, correlation of different features with the future prices are examined to get a more clear view although, correlation uncovers only the degree of linear relationship between variables.\\
+\\
+\textbf{Fig.3} Set of bar plots showing the Pearson correlation coefficient of target returns(T+1, T+2, T+3, T+4, T+5) with all features.\\
+\includegraphics[width=12cm]{plots/corrcoeffs.png}\\
+Generally all correlation coefficients here are small in magnitude as is the case with any financial return regressors. It can be seen that RSD has relatively highest absolute correlation with future returns. Since correlation-measure indicates the degree of linear relationship between variables, a simple Linear Regression would be able to take advantage of these relationships to do prediction. Even though the the correlation coefficients of LogVolume and MScore with targets are very low, a nonlinear regression may be able to make use of these features to make predictions better than the linear models.
+\subsection*{Algorithms and Techniques}
+% This project focus on using AdaBoost ensemble regression method with different base estimators. AdaBoost lets the use of several ensembles of a weak learner to produce a better performing meta-model on the given dataset. The following models are evaluated on the dataset to do 5-day forecast of adjusted-close prices.
+% \begin{enumerate}
+% \item AdaBoost Regressor with KNN as base regression algorithm. The parameters to tune are K(The number of nearest neighbors in KNN), n\_estimators(number of estimators for AdaBoost).
+% \item AdaBoost Regressor with Linear regression as base algorithm. The parameters to tune is n\_estimators (number of estimators for AdaBoost).
+% \end{enumerate}
+% The parameters of these models are tuned by looking at the performance in the validation set. Since the dataset is small enough as shown in Data Processing section, whole of it is held in RAM during the process of training, parameter tuning with validation set and evaluation in the test set.
+\subsection*{Benchmark}
+Ordinary least squares Linear Regression is used as the benchmark model. This model produce an average $R^2$ score of $-0.169495$ on the dataset of the selected stocks[AAPL, HIG, MRK, PLD, XOM].
+\section{Methodology}
+\subsection*{Data Processing}
+To evaluate each prediction model, only a random sample of 5 stocks[AAPL, HIG, MRK, PLD, XOM] is used without much loss of generality. First step is to form a dataset in the form ([set of features], target). A single row in this dataset for each date for a particular stock has the features :
 \begin{enumerate}
 \item Adj Close for past $m=5$ days including current date i.e., the date of dataset row.
 \item SMA for past $m=5$ days including current date.
@@ -123,30 +148,11 @@ Next step is to form a dataset in the form ([set of features], target). A single
 \item MScore for past $m=5$ days including current date.
 \item LogVolume for past $m=5$ days including current date.
 \end{enumerate}
-The target for each row is the vector of next 5 day's adjusted close prices. Number of rows in the dataset is $2736$ because of  5-day look back for computing features including current day and 5-day forecast. Number of features in each example is $6 \times 5 = 30$ and the number of targets per each example is $5$. The amount of memory required to load the dataset assuming 8-bytes for a floating point number is $ 308 \times 2736 \times ( 30  +  5 ) \times 8 = 235,952,640 \text{ Bytes} \approx 225.02 \text{ MB}$. So the whole dataset can be loaded in memory for any modern machine.
-\subsection*{Exploratory Visualization}
-The exploratory visualization of a particular stock can be seen by invoking the \texttt{explore.py} script as :\\
-\texttt{\$ cd src\\
-\$ python explore.py}\\
-It produces the histogram plots of all features used and also the variation of all normalized features as a function of date.\\
-\textbf{Fig.1} Set of histograms of the features Adjusted-Close price(Adj Close), Bollinger Bands score(BB), Natural logarithm of volume (LogVolume), Momentum score(MOM), Rolling standard deviation(RSD), Simple moving average(SMA). Adj Close and SMA have similar histograms as expected. MOM has an approximate normal distribution with $mean = 1.0$ BB's histogram indicate a dominant positive mode indicating frequent price movements above SMA. RSD has an approximate lognormal distribution\\
-\includegraphics[width=11cm]{plots/histograms.png}\\
-\textbf{Fig.2} Set of plots showing the timeseries of normalized features for AAPL stock with date range [2006-01-18 to 2007-03-28]. Top plot indicate the timeseries of normalized Adjusted close price, SMA and RSD. Middle plot shows timeseries of Adjusted close, BBscore, MScore and the bottom plot shows the timeseries of Adj Close and LogVolume.\\
-\includegraphics[width=12cm]{plots/allplots.png}\\
-It can be seen from the first timeseries plot that SMA is a smoother version of the adjusted close price and lags a bit behind it. RSD value becomes high whenever there is a large instantaneous variation in adj close from SMA. Momentum score(MOM) shows that often when it is very high the immediate future prices are going to go up and very low values of MOM indicate a immediate future price drop. Volume time series shows that it goes up usually due to a large variation of price in a small time window. Generally visual inferences from timeseries plots are difficult apart from some very obvious cues in price movements. Next, correlation of different features with the future prices are examined to get a more clear view although, correlation uncovers only the degree of linear relationship between variables.\\
-\\
-\\
-\\
-\\
-\\
-\\
-\\
-\\
-\textbf{Fig.3} Set of bar plots showing the Pearson correlation coefficient of targets Adjusted close(T+1, T+2, T+3, T+4, T+5) with all features.\\
-\includegraphics[width=12cm]{plots/corrcoeffs.png}\\
-It can be easily noted that there is high positive correlation between previous days adjusted close price, and SMA with future adjusted close prices. There is moderate positive correlation between RSD and targets and LogVolume has high negative correlation with targets. Since correlation-measure indicates the degree of linear relationship between variables, a simple Linear Regression would be able to take advantage of these relationships to do prediction. Even though the the correlation coefficient of BBScore and MScore with targets are very low, a nonlinear regression may be able to make use of these features to make predictions better than the linear models.
+The target for each row is the vector of next 5 day's returns. Number of rows in the dataset is $2736$ because of 5-day look back for computing features including current day and 5-day forecast. Number of features in each example is $6 \times 5 = 30$ and the number of targets per each example is $5$. The amount of memory required to load the dataset assuming 8-bytes for a floating point number is $ 308 \times 2736 \times ( 30  +  5 ) \times 8 = 235,952,640 \text{ Bytes} \approx 225.02 \text{ MB}$. So the whole dataset can be loaded in memory for any modern machine.
 
-\section{Methodology}
+Next step is to divide the dataset to training, validation set and test set in the proportion 80:10:10. Before applying any learning algorithm, the features are normalized using mean and standard deviation:
+$feature_i^{normalized} = \frac{feature_i - mean(feature_i)}{stddev(feature_i)}$
+\subsection*{Implementation}
 
 \section{Results}
 

@@ -71,7 +71,7 @@ class StockTimeSeriesExplorer(object):
         plt.savefig('../report/plots/allplots.png')
         
     def show_feature_correlation_with_target(self):
-        dset = SingleStockDataSet('AAPL')
+        dset = SingleStockDataSet('AAPL', dropcolnames=False)
         basefeatures = [ ('ac', 'Adj Close'),
                          ('sma', 'SMA'),
                          ('rsd', 'RSD'),
@@ -81,7 +81,7 @@ class StockTimeSeriesExplorer(object):
         fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(12, 8))
         for tgtshift in xrange(1, 6):
             targetcol = 'ac_tp%d' % (tgtshift)
-            heading = 'Adj Close of T+%d' % (tgtshift)
+            heading = 'Adjusted close on T+%d' % (tgtshift)
             corrdf = pd.DataFrame(index=[basef[1] for basef in basefeatures],
                                   columns=['T-0', 'T-1', 'T-2', 'T-3', 'T-4'])
             for basef in basefeatures:
@@ -90,7 +90,7 @@ class StockTimeSeriesExplorer(object):
                     colname = 'T-%d' % (tshift)
                     corrdf.loc[basef[1], colname] = np.corrcoef(dset.X[[featname]].values.astype(np.float64),
                                                                 dset.Y[[targetcol]].values.astype(np.float64), rowvar=0)[0][1]
-            print corrdf
+            #print corrdf
             subax = corrdf.plot.barh(ax=axes[tgtshift-1])
             subax.set_title(heading, fontsize=10)
             subax.legend(fontsize='xx-small')
