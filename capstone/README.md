@@ -2,6 +2,8 @@
 
 * python 2.7
 * numpy
-* pandas
-* keras with tensorflow/theano
+* OpenAI's gym [package](https://github.com/openai/gym)
+* Keras with tensorflow or theano
+* keras-rl - [Deep Reinforcement Learning for Keras](https://github.com/matthiasplappert/keras-rl)
+
 
