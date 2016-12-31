@@ -12,8 +12,8 @@ class Experiment(object):
         self.num_episodes = num_episodes
         self.envname = env.__str__().split(' ')[0].lstrip('<')
         self.agentname = self.agent.name
-        self.monitordir = self.envname + '_' + self.agentname
-        self.logger = ExperimentLogger(logdir=logdir, verbose=verbose, prefix=self.monitordir)
+        self.monitordir = '../monitor/' + self.envname + '_' + self.agentname
+        self.logger = ExperimentLogger(logdir=logdir, prefix=self.monitordir, num_episodes=self.num_episodes, verbose=verbose )
         os.makedirs(self.monitordir)
         self.env.monitor.start(self.monitordir)
 
@@ -35,10 +35,8 @@ class Experiment(object):
                 action = self.agent.decide(curstate)
                 prevstate = curstate
                 curstate, reward, done, _ = self.env.step(action)
-                self.agent.observe(prevstate, action, reward, curstate, done)
                 totreward += reward
                 if learn:
+                    self.agent.observe(prevstate, action, reward, curstate, done)
                     loss += self.agent.learn()
             self.logger.log_episode(totreward, loss, numsteps)
-                
-            
