@@ -80,3 +80,33 @@ class RandomSearchAgent(object):
 
     def learn(self):
         return 0.0
+
+class DQNAgent(object):
+    """ This agent uses DQN for making action decisions with 1-epsilon probability """
+
+    def __init__(self, name, state_dim, action_dim, qnetwork, epsdecay=0.995, buffersize=100000, samplesize=32):
+        """ Accepts a unique agent name, number of variables in the state,
+            number of actions and initialize the agent """
+        self.name       = name
+        self.state_dim  = state_dim
+        self.action_dim = action_dim
+        
+    def decide(self, curstate):
+        """ Accepts current state as input and returns action to take """
+        return random.randint(0, self.action_dim-1)
+
+    def observe(self, prevstate, action, reward, curstate, done):
+        """ Accepts an observation (s,a,r,s',done) as input, uses it to compute the
+            mean and std of state variables """
+        self.state_sum      += prevstate
+        self.statesqr_sum   += (prevstate**2)
+        self.observation_count += 1
+
+    def learn(self):
+        return 0.0
+
+    def describe_state_variables(self):
+        mean    = self.state_sum / float(self.observation_count)
+        sqrmean = self.statesqr_sum / float(self.observation_count)
+        std     = np.sqrt(sqrmean - (mean**2))
+        return mean, std
