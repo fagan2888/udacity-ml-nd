@@ -41,7 +41,7 @@ class ExperimentLogger(object):
         self.upstd_plt       = plt1.plot(x, self.upstd, 'g')[0]
         self.downstd_plt     = plt1.plot(x, self.downstd, 'r')[0]
         plt1.legend([self.instrewards_plt, self.avgrewards_plt, self.upstd_plt, self.downstd_plt],
-                    ['Episode reward', 'Mean reward', 'Mean + 1*stddev', 'Mean - 1*stddev'])
+                    ['Episode reward', 'Mean reward', 'Mean + 1*stddev', 'Mean - 1*stddev'], bbox_to_anchor=(0, 1), loc='upper left', ncol=4)
         plt1.set_xlabel('Episodes')
         plt1.set_ylabel('Rewards')
         plt1.set_ylim(bottom=-300.0, top=350)
