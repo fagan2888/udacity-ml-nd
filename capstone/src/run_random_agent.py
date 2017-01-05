@@ -1,6 +1,8 @@
 
 from agents import RandomAgent
 from experiments import Experiment
+from evaluator import evaluate
+
 import matplotlib.pyplot as plt
 import pickle
 
@@ -42,5 +44,6 @@ print std
 pickle.dump( (mean, std), open( "../params/state-stats.pkl", "wb" ) )
 
 fig.savefig('../log/state-space.png')
+evaluate('../monitor/LunarLander_RandomAgent-1_data.csv', '../monitor/LunarLander_RandomAgent-1_evaluation.png', 'Low Benckmark')
 
 plt.show()
