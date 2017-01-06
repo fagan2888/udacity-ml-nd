@@ -7,8 +7,13 @@ def evaluate(datafile, plotfname, agentname):
     er = df["reward"].mean()
     stdr = df["reward"].std()
     en = df["steps"].mean()
-    psi = 154.42060
-    score = psi*er/(en*stdr)
+    psi = 0.00647582
+    sharpe = er/stdr
+    print 'sharpe ratio = %.5f' % sharpe
+    print 'E[N] = %.5f' % en
+    #print 'psi = %.8f' % (sharpe/en)
+    score = sharpe - psi*en
+    print 'score = %.5f' % score
     ###
     x = np.arange(1, df.shape[0]+1)
     fig = plt.figure(figsize=(12,9))
