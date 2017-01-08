@@ -35,31 +35,31 @@ class ExperimentLogger(object):
         plt.ion()
         self.figure = plt.figure()
         ##
-        plt1 = plt.subplot(311)
-        self.instrewards_plt = plt1.plot(x, self.instrewards, 'k')[0]
-        self.avgrewards_plt  = plt1.plot(x, self.avgrewards, 'b')[0]
-        self.upstd_plt       = plt1.plot(x, self.upstd, 'g')[0]
-        self.downstd_plt     = plt1.plot(x, self.downstd, 'r')[0]
-        plt1.legend([self.instrewards_plt, self.avgrewards_plt, self.upstd_plt, self.downstd_plt],
+        self.plt1 = plt.subplot(311)
+        self.instrewards_plt = self.plt1.plot(x, self.instrewards, 'k')[0]
+        self.avgrewards_plt  = self.plt1.plot(x, self.avgrewards, 'b')[0]
+        self.upstd_plt       = self.plt1.plot(x, self.upstd, 'g')[0]
+        self.downstd_plt     = self.plt1.plot(x, self.downstd, 'r')[0]
+        self.plt1.legend([self.instrewards_plt, self.avgrewards_plt, self.upstd_plt, self.downstd_plt],
                     ['Episode reward', 'Mean reward', 'Mean + 1*stddev', 'Mean - 1*stddev'], bbox_to_anchor=(0, 1), loc='upper left', ncol=4)
-        plt1.set_xlabel('Episodes')
-        plt1.set_ylabel('Rewards')
-        plt1.set_ylim(bottom=-300.0, top=350)
-        plt1.grid(b=True, which='major', color='k', linestyle='--')
+        self.plt1.set_xlabel('Episodes')
+        self.plt1.set_ylabel('Rewards')
+        self.plt1.set_ylim(bottom=-300.0, top=350)
+        self.plt1.grid(b=True, which='major', color='k', linestyle='--')
         ##
-        plt2 = plt.subplot(312)
-        self.losses_plt = plt2.plot(x, self.losses, 'r')[0]
-        plt2.set_xlabel('Episodes')
-        plt2.set_ylabel('Loss')
-        plt2.set_ylim(bottom=0, top=350)
-        plt2.grid(b=True, which='major', color='k', linestyle='--')
+        self.plt2 = plt.subplot(312)
+        self.losses_plt = self.plt2.plot(x, self.losses, 'r')[0]
+        self.plt2.set_xlabel('Episodes')
+        self.plt2.set_ylabel('Loss')
+        self.plt2.set_ylim(bottom=0, top=350)
+        self.plt2.grid(b=True, which='major', color='k', linestyle='--')
         ##
-        plt3 = plt.subplot(313)
-        self.steps_plt = plt3.plot(x, self.steps, 'r')[0]
-        plt3.set_xlabel('Episodes')
-        plt3.set_ylabel('Steps')
-        plt3.set_ylim(bottom=0, top=1010)
-        plt3.grid(b=True, which='major', color='b', linestyle='--')
+        self.plt3 = plt.subplot(313)
+        self.steps_plt = self.plt3.plot(x, self.steps, 'r')[0]
+        self.plt3.set_xlabel('Episodes')
+        self.plt3.set_ylabel('Steps')
+        self.plt3.set_ylim(bottom=0, top=1010)
+        self.plt3.grid(b=True, which='major', color='b', linestyle='--')
         
     def __del__(self):
         self.datafile.close()
@@ -82,6 +82,7 @@ class ExperimentLogger(object):
         self.upstd_plt.set_ydata(self.upstd)
         self.downstd_plt.set_ydata(self.downstd)
         self.losses_plt.set_ydata(self.losses)
+        self.plt2.set_ylim(bottom=min(self.losses), top=max(self.losses))
         self.steps_plt.set_ydata(self.steps)
         plt.draw()
         plt.pause(0.01)
@@ -101,6 +102,7 @@ class ExperimentLogger(object):
                'loss'       : loss,
                'steps'      : numsteps}
         self.datafile.write('%(episodeidx)d,%(reward)f,%(rewardlow)f,%(rewardavg)f,%(rewardhigh)f,%(loss)f,%(steps)d\n' % row)
+        self.datafile.flush()
         self.episodeidx += 1
 
 
