@@ -1,12 +1,11 @@
 
-\documentclass{svproc}
+\documentclass{article}
 \usepackage {graphicx, amsmath, amsfonts, algorithm, algorithmic, multirow}
-
 \begin{document}
-\mainmatter
+%\mainmatter
 \title{Capstone Project \\ {\large Machine Learning Engineer Nanodegree}}
-\author{Dennis P. F. \\ {\small December 31, 2016}}
-\institute{}
+\author{Dennis P. F.}
+%\institute{}
 %\date{December 31, 2016}
 \maketitle
 \pagestyle{empty}
@@ -14,13 +13,14 @@
 \subsection*{Project Overview}
 This project focuses on building a learning agent for LunarLander-v2 gym environment provided by OpenAI\cite{challenge}, where the agent has to navigate a space vehicle from the starting point to the landing pad on the surface of the moon without crashing.
 \subsection*{Problem Statement}
-The aim of the project is to build a learning agent to navigate a space vehicle from starting point in space to the landing pad without crashing. The environment is called LunarLander-v2 which is provided by OpenAI's gym python package. At each step, the agent is provided with the current state of the space vehicle $s$ which is a 8 dimensional vector of reals $\mathbb{R}^8$ and the agent is allowed to make one of four possible actions \{ \texttt{do nothing, fire left orientation engine, fire main engine, fire right orientation engine} \} in one step. On making an action $a$, the agent gets a reward $r$ and also get to know the new state of the vehicle $s'$. If the vehicle moves from the top of the screen to reach landing pad at zero speed, it gets reward in the range $[100, 140]$. The vehicle is permitted to land outside the landing pad, but is penalized for such cases. The episode finishes if the vehicle crashes(gets additional reward of -100) or comes to rest(gets additional reward of +100) which are the end states. There is an upper limit of 1000 on the number of steps in an episode. There is no restriction on the amount of fuel used. The agent is supposed to learn a policy $\pi(s)$ that decides what action it must make at a given current state $s$ by going over the past experiences defined by the tuple $<s, a, r, s'>$.  The objective of this project is two fold - Create an agent such that it 1) maximize the expected total reward per episode with minimum variance in \textit{test} trials. and 2) minimize the expected episode length in \textit{test} trials. These two objectives are used to formally state an agent score in the Metrics section.
+The aim of the project is to build a learning agent to navigate a space vehicle from starting point in space to the landing pad without crashing. The environment is called LunarLander-v2 which is provided by OpenAI's gym python package. At each step, the agent is provided with the current state of the space vehicle $s$ which is a 8 dimensional vector of reals $\mathbb{R}^8$ and the agent is allowed to make one of four possible actions \{ \texttt{do nothing, fire left orientation engine, fire main engine, fire right orientation engine} \} in one step. On making an action $a$, the agent gets a reward $r$ and also get to know the new state of the vehicle $s'$. If the vehicle moves from the top of the screen to reach landing pad at zero speed, it gets reward in the range $[100, 140]$. The vehicle is permitted to land outside the landing pad, but is penalized for such cases. The episode finishes if the vehicle crashes(gets additional reward of -100) or comes to rest(gets additional reward of +100) or hits the maximum episode length of 1000. There is no restriction on the amount of fuel used. The agent is supposed to learn a policy $\pi(s)$ that decides what action it must make at a given current state $s$ by going over the past experiences defined by the tuple $<s, a, r, s'>$.  The objective of this project is two fold - Create an agent such that it 1) maximize the expected total reward per episode with minimum variance in \textit{test} trials. and 2) minimize the expected episode length in \textit{test} trials. These two objectives are used to formally state an agent score in the Metrics section.
 \subsection*{Metrics}
 A single number score of how well an agent meets both the objectives stated in Problem Statement section can be mathematically written in many different ways, but for the purpose of this project the following formalization is used.\\\\
-$M = \frac{\mathbf{E}[R]}{\sqrt{\mathbf{Var}[R]}} - \psi \mathbf{E}[N] $\\\\
+$M = \begin{cases} \frac{\mathbf{E}[R]}{\sqrt{\mathbf{Var}[R]}} - \psi \mathbf{E}[N] & \mathbf{E}[R] \ge 0\\\\
+ \mathbf{E}[R] & \mathbf{E}[R] < 0 \end{cases}$\\\\
 where $R$ and $N$ are the random variables representing the total reward per episode and episode length respectively in \textit{test} trials. So basically the score is a linear function of \textit{Sharpe} ratio of $R$ and expected value of $N$. $\psi$ is a constant coefficient set in such a way that $M$-score of benchmark agent is 0.0 in test trial conducted with a fixed random seed. Empirically this score is calculated as :\\\\
 $M = \frac{\bar{R}}{\sqrt{\sum_{j=1}^{T} \left( R_j - \bar{R}\right)^2}} - \psi \bar{N}$\\\\\\
-where $\bar{R} = \frac{\sum_{j=1}^{T} R_j}{T}$ and $\bar{N} = \frac{\sum_{j=1}^{T} N_j}{T}$ and $T$ is the number of test episodes conducted. Intuitively the score increases linearly with Sharpe ratio of $R$ and decreases linearly with expected episode length. Sharpe ratio measure commonly used in finance domain. Here it is used to penalize the agents with higher reward-variance from a set of agents with similar expected rewards.
+where $\bar{R} = \frac{\sum_{j=1}^{T} R_j}{T}$ and $\bar{N} = \frac{\sum_{j=1}^{T} N_j}{T}$ and $T$ is the number of test episodes conducted. Intuitively the score increases linearly with Sharpe ratio of $R$ and decreases linearly with expected episode length when expected reward is positive. Sharpe ratio measure commonly used in finance domain. Here it is used to penalize the agents with higher reward-variance from a set of agents with similar positive expected rewards. For negative expected rewards, it does not make sense to scale it down by reward-variance.
 By evaluating the high benchmark agent $\psi$ is set to $0.00647582$ in order to make its $M$ score zero. For every agent considered in this project a constraint of maximum train episodes of $500$ is used to minimize any bias on the training length used for the agents. The number of test episodes is also constrained to $500$ for evaluation. In testing phase, the episode length of each episode is truncated above at $1000$ steps.
 \section{Analysis}
 \subsection*{Data Exploration}
@@ -42,7 +42,8 @@ From an experience tuple $<s, a, r, s'>$ the neural network approximation of $Q^
 	\item Compute the target Q values for state $s$ to construct a training example for the Q network as :\\
 	Set $t_{a'} = q_{a'} \forall a' \neq a$\\Set $ t_{a} = \begin{cases} r + \gamma \max_{a'}p_{a'} & \text{s is not the end state}\\ r & \text{s is the end state}        \end{cases}$\\ The training example is now $\{s, (t_1, t_2, ..., t_k)\}$ where $k$ is the total number of actions.
 \end{enumerate}
-The Q approximation neural network is trained using these generated training examples via back-propagation using Adam\cite{adam} optimizer. The agent stores the experience tuples $<s, a, r, s'>$ in a memory buffer which can store $100000$ such tuples. The neural network is trained in every step by randomly sampling 32 tuples from this buffer. This technique is referred to as \textit{experience replay} in the original DQN paper. For making actions in each step the agent follows a $\epsilon$-greedy method in which the agent makes random action with probability $\epsilon$ and uses the Q network's outputs to decide best actions (greedy) with probability $1-\epsilon$. Initially $\epsilon$ is set to $1.0$ (full exploration) and then decayed exponentially by a factor of $0.995$.
+The Q approximation neural network is trained using these generated training examples via back-propagation using Adam\cite{adam} optimizer. The agent stores the experience tuples $<s, a, r, s'>$ in a memory buffer which can store $100000$ such tuples. The neural network is trained in every step by randomly sampling 32 tuples from this buffer. This technique is referred to as \textit{experience replay} in the original DQN paper. For making actions in each step the agent follows a $\epsilon$-greedy method in which the agent makes random action with probability $\epsilon$ and uses the Q network's outputs to decide best actions (greedy) with probability $1-\epsilon$. Initially $\epsilon$ is set to $1.0$ (full exploration) and then decayed exponentially by a factor of $0.975$. All of these constitute the \textit{Basic DQN agent}. Some possible problems with this agent is that Q function neural network learner can become unstable. In this project, two possible reasons for this instability is addressed in the \textit{Improved DQN agent}. The issues dealt with are :\\1) Due to use of mean squared error loss function, if the training sample does not align with current estimates, the gradients produced will be high and alter the network weights substantially resulting in poor performance. One of the solution is to use Huber loss function $H(e) = \sqrt{1+e^2} - 1$ where e is the error between prediction and target. This function has the advantage of being differentiable and have maximum derivative of $\pm1$.\\2) Second issue is that the target is calculated using the current network estimates, so the target for learning is moving with each training batch. This might cause divergence of the network estimates over time as can be seen in the performance evaluation of the basic DQN agent in later sections. To mitigate this issue, a separate neural network is used for getting the targets, called \textit{Target network} whose weights are updated from the original network at some particular rate.\\
+\vspace{5.0cm}
 \subsection*{Benchmark}
 An agent which chooses random action every step is chosen as the baseline algorithm or low benchmark. This algorithm does not learn from past experiences and is expected not to solve the environment with a very high probability and will get a negative score. The basic DQN algorithm is compared against its different variations/improvements.
 The baseline algorithm RandomAgent can be run as:\\
@@ -50,9 +51,9 @@ The baseline algorithm RandomAgent can be run as:\\
 \texttt{\\\$ python run\_random\_agent.py}\\\\
 Below plots shows the performance of random agent a) in terms of the reward earned per episode for 500 episodes and b) number of steps in each episode.\\\\
 \includegraphics[width=12cm,trim={0 0 0 0},clip]{img/randomagent}\\
-As expected the agent was not able to achieve rewards greater than $0$ in any of the episodes with mean reward under $-200.0$ indicating that the vehicle crashed in most cases. Another fact is that episode length in general is well below 200 steps. As a result of both these, the random agent low benchmark got a negative $M$-score of $-2.6361$.\\\\
+As expected the agent was not able to achieve rewards greater than $0$ in any of the episodes with mean reward under $-200.0$ indicating that the vehicle crashed in most cases. Another fact is that episode length in general is well below 200 steps. As a result of both these, the random agent low benchmark got a negative $M$-score of $-229.932$ which is same the expected episode reward.\\\\
 A high benchmark agent was built using Keras reinforcement library\cite{kerasrl}. For this benchmark a DQN was built with the following specifications:
-\vspace{-0.2cm}
+\vspace{-0.1cm}
 \begin{enumerate}
 	\item A neural network with 2 hidden layers each with 40 nodes.
 	\item Each hidden layer is followed by a \textit{Rectified Linear} activation layer.
@@ -61,7 +62,7 @@ A high benchmark agent was built using Keras reinforcement library\cite{kerasrl}
 	\item Soft target model update is done with parameter $0.01$.
 	\item $\epsilon$-greedy policy was used while training with $\epsilon = 0.975$.
 \end{enumerate}
-Following plots show the test episode performance of this high benchmark agent which has an $M$-score of $0$ as per the metric design.\\\\
+Following plots show the test trial performance of this high benchmark agent which has an $M$-score of $0$ as per the metric design.\\\\
 \includegraphics[width=12cm,trim={0 0 0 0},clip]{img/highbenchmark_test_evaluation}\\
 \section{Methodology}
 \subsection*{Data Processing}
