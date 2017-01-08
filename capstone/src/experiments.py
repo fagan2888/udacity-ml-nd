@@ -13,16 +13,18 @@ class Experiment(object):
         self.envname = env.__str__().split(' ')[0].lstrip('<')
         self.agentname = self.agent.name
         self.monitordir = '../monitor/' + self.envname + '_' + self.agentname
-        self.logger = ExperimentLogger(logdir=logdir, prefix=self.monitordir, num_episodes=self.num_episodes, verbose=verbose )
+        self.prefix = self.envname + '_' + self.agentname
+        self.logger_train = ExperimentLogger(logdir=logdir, prefix=(self.prefix  + "_train"), num_episodes=self.num_episodes, verbose=verbose )
+        self.logger_test  = ExperimentLogger(logdir=logdir, prefix=(self.prefix + "_test"),   num_episodes=self.num_episodes, verbose=verbose )
         os.makedirs(self.monitordir)
         self.env.monitor.start(self.monitordir)
 
     def __del__(self):
         self.env.monitor.close()
 
-    def run(self, learn=True):
+    def run(self, testmode=False):
         """ Run num_episodes episodes on self.env with self.agent.
-            It will let the agent learn only if learn==True.
+            It will let the agent learn only if testmode==False.
         """
         for episodeidx in xrange(self.num_episodes):
             curstate = self.env.reset()
@@ -32,11 +34,14 @@ class Experiment(object):
             totreward = 0.0
             while not done:
                 numsteps += 1
-                action = self.agent.decide(curstate)
+                action = self.agent.decide(curstate, testmode=testmode)
                 prevstate = curstate
                 curstate, reward, done, _ = self.env.step(action)
                 totreward += reward
-                if learn:
+                if not testmode:
                     self.agent.observe(prevstate, action, reward, curstate, done)
                     loss += self.agent.learn()
-            self.logger.log_episode(totreward, loss, numsteps)
+            if testmode:
+                self.logger_test.log_episode(totreward, loss, numsteps)
+            else:
+                self.logger_train.log_episode(totreward, loss, numsteps)
