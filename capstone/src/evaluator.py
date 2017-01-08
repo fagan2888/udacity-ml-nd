@@ -9,10 +9,16 @@ def evaluate(datafile, plotfname, agentname):
     en = df["steps"].mean()
     psi = 0.00647582
     sharpe = er/stdr
+    print 'E[R] = %.5f' % er
+    print 'STD[R] = %.5f' % stdr
     print 'sharpe ratio = %.5f' % sharpe
     print 'E[N] = %.5f' % en
     #print 'psi = %.8f' % (sharpe/en)
-    score = sharpe - psi*en
+    score = 0.0
+    if er > 0.0:
+        score = sharpe - psi*en
+    else:
+        score = er
     print 'score = %.5f' % score
     ###
     x = np.arange(1, df.shape[0]+1)
