@@ -1,6 +1,13 @@
 
 \documentclass{article}
 \usepackage {graphicx, amsmath, amsfonts, algorithm, algorithmic, multirow}
+\setlength{\topmargin}{-2cm}
+\setlength{\oddsidemargin}{0cm}
+\setlength{\textheight}{24cm}
+\setlength{\textwidth}{16cm}
+
+\renewcommand{\baselinestretch}{1.5}
+
 \begin{document}
 %\mainmatter
 \title{Capstone Project \\ {\large Machine Learning Engineer Nanodegree}}
@@ -16,11 +23,11 @@ This project focuses on building a learning agent for LunarLander-v2 gym environ
 The aim of the project is to build a learning agent to navigate a space vehicle from starting point in space to the landing pad without crashing. The environment is called LunarLander-v2 which is provided by OpenAI's gym python package. At each step, the agent is provided with the current state of the space vehicle $s$ which is a 8 dimensional vector of reals $\mathbb{R}^8$ and the agent is allowed to make one of four possible actions \{ \texttt{do nothing, fire left orientation engine, fire main engine, fire right orientation engine} \} in one step. On making an action $a$, the agent gets a reward $r$ and also get to know the new state of the vehicle $s'$. If the vehicle moves from the top of the screen to reach landing pad at zero speed, it gets reward in the range $[100, 140]$. The vehicle is permitted to land outside the landing pad, but is penalized for such cases. The episode finishes if the vehicle crashes(gets additional reward of -100) or comes to rest(gets additional reward of +100) or hits the maximum episode length of 1000. There is no restriction on the amount of fuel used. The agent is supposed to learn a policy $\pi(s)$ that decides what action it must make at a given current state $s$ by going over the past experiences defined by the tuple $<s, a, r, s'>$.  The objective of this project is two fold - Create an agent such that it 1) maximize the expected total reward per episode with minimum variance in \textit{test} trials. and 2) minimize the expected episode length in \textit{test} trials. These two objectives are used to formally state an agent score in the Metrics section.
 \subsection*{Metrics}
 A single number score of how well an agent meets both the objectives stated in Problem Statement section can be mathematically written in many different ways, but for the purpose of this project the following formalization is used.\\\\
-$M = \begin{cases} \frac{\mathbf{E}[R]}{\sqrt{\mathbf{Var}[R]}} - \psi \mathbf{E}[N] & \mathbf{E}[R] \ge 0\\\\
+$M = \begin{cases} \dfrac{\mathbf{E}[R]}{\sqrt{\mathbf{Var}[R]}} - \psi \mathbf{E}[N] & \mathbf{E}[R] \ge 0\\\\
  \mathbf{E}[R] & \mathbf{E}[R] < 0 \end{cases}$\\\\
 where $R$ and $N$ are the random variables representing the total reward per episode and episode length respectively in \textit{test} trials. So basically the score is a linear function of \textit{Sharpe} ratio of $R$ and expected value of $N$. $\psi$ is a constant coefficient set in such a way that $M$-score of benchmark agent is 0.0 in test trial conducted with a fixed random seed. Empirically this score is calculated as :\\\\
-$M = \frac{\bar{R}}{\sqrt{\sum_{j=1}^{T} \left( R_j - \bar{R}\right)^2}} - \psi \bar{N}$\\\\\\
-where $\bar{R} = \frac{\sum_{j=1}^{T} R_j}{T}$ and $\bar{N} = \frac{\sum_{j=1}^{T} N_j}{T}$ and $T$ is the number of test episodes conducted. Intuitively the score increases linearly with Sharpe ratio of $R$ and decreases linearly with expected episode length when expected reward is positive. Sharpe ratio measure commonly used in finance domain. Here it is used to penalize the agents with higher reward-variance from a set of agents with similar positive expected rewards. For negative expected rewards, it does not make sense to scale it down by reward-variance.
+$M = \dfrac{\bar{R}}{\sqrt{\sum_{j=1}^{T} \left( R_j - \bar{R}\right)^2}} - \psi \bar{N}$\\\\\\
+where $\bar{R} = \dfrac{\sum_{j=1}^{T} R_j}{T}$ and $\bar{N} = \dfrac{\sum_{j=1}^{T} N_j}{T}$ and $T$ is the number of test episodes conducted. Intuitively the score increases linearly with Sharpe ratio of $R$ and decreases linearly with expected episode length when expected reward is positive. Sharpe ratio measure commonly used in finance domain. Here it is used to penalize the agents with higher reward-variance from a set of agents with similar positive expected rewards. For negative expected rewards, it does not make sense to scale it down by reward-variance.
 By evaluating the high benchmark agent $\psi$ is set to $0.00647582$ in order to make its $M$ score zero. For every agent considered in this project a constraint of maximum train episodes of $500$ is used to minimize any bias on the training length used for the agents. The number of test episodes is also constrained to $500$ for evaluation. In testing phase, the episode length of each episode is truncated above at $1000$ steps.
 \section{Analysis}
 \subsection*{Data Exploration}
@@ -42,15 +49,14 @@ From an experience tuple $<s, a, r, s'>$ the neural network approximation of $Q^
 	\item Compute the target Q values for state $s$ to construct a training example for the Q network as :\\
 	Set $t_{a'} = q_{a'} \forall a' \neq a$\\Set $ t_{a} = \begin{cases} r + \gamma \max_{a'}p_{a'} & \text{s is not the end state}\\ r & \text{s is the end state}        \end{cases}$\\ The training example is now $\{s, (t_1, t_2, ..., t_k)\}$ where $k$ is the total number of actions.
 \end{enumerate}
-The Q approximation neural network is trained using these generated training examples via back-propagation using Adam\cite{adam} optimizer. The agent stores the experience tuples $<s, a, r, s'>$ in a memory buffer which can store $100000$ such tuples. The neural network is trained in every step by randomly sampling 32 tuples from this buffer. This technique is referred to as \textit{experience replay} in the original DQN paper. For making actions in each step the agent follows a $\epsilon$-greedy method in which the agent makes random action with probability $\epsilon$ and uses the Q network's outputs to decide best actions (greedy) with probability $1-\epsilon$. Initially $\epsilon$ is set to $1.0$ (full exploration) and then decayed exponentially by a factor of $0.975$. All of these constitute the \textit{Basic DQN agent}. Some possible problems with this agent is that Q function neural network learner can become unstable. In this project, two possible reasons for this instability is addressed in the \textit{Improved DQN agent}. The issues dealt with are :\\1) Due to use of mean squared error loss function, if the training sample does not align with current estimates, the gradients produced will be high and alter the network weights substantially resulting in poor performance. One of the solution is to use Huber loss function $H(e) = \sqrt{1+e^2} - 1$ where e is the error between prediction and target. This function has the advantage of being differentiable and have maximum derivative of $\pm1$.\\2) Second issue is that the target is calculated using the current network estimates, so the target for learning is moving with each training batch. This might cause divergence of the network estimates over time as can be seen in the performance evaluation of the basic DQN agent in later sections. To mitigate this issue, a separate neural network is used for getting the targets, called \textit{Target network} whose weights are updated from the original network at some particular rate.\\
-\vspace{5.0cm}
+The Q approximation neural network is trained using these generated training examples via back-propagation using Adam\cite{adam} optimizer. The agent stores the experience tuples $<s, a, r, s'>$ in a memory buffer which can store $100000$ such tuples. The neural network is trained in every step by randomly sampling 32 tuples from this buffer. This technique is referred to as \textit{experience replay} in the original DQN paper. For making actions in each step the agent follows a $\epsilon$-greedy method in which the agent makes random action with probability $\epsilon$ and uses the Q network's outputs to decide best actions (greedy) with probability $1-\epsilon$. Initially $\epsilon$ is set to $1.0$ (full exploration) and then decayed exponentially by a factor of $0.975$. All of these constitute the \textit{Basic DQN agent}. Some possible problems with this agent is that Q function neural network learner can become unstable. In this project, two possible reasons for this instability is addressed in the \textit{Improved DQN agent}. The issues dealt with are :\\1) Due to use of mean squared error loss function, if the training sample does not align with current estimates, the gradients produced will be high and alter the network weights substantially resulting in poor performance. One of the solution is to use Huber loss function $H(e) = \sqrt{1+e^2} - 1$ where e is the error between prediction and target. This function has the advantage of being differentiable and have maximum derivative of $\pm1$.\\2) Second issue is that the target is calculated using the current network estimates, so the target for learning is moving with each training batch. This might cause divergence of the network estimates over time as can be seen in the performance evaluation of the basic DQN agent in later sections. To mitigate this issue, a separate neural network is used for getting the targets, called \textit{Target network} whose weights are updated from the original network at some particular rate.
 \subsection*{Benchmark}
 An agent which chooses random action every step is chosen as the baseline algorithm or low benchmark. This algorithm does not learn from past experiences and is expected not to solve the environment with a very high probability and will get a negative score. The basic DQN algorithm is compared against its different variations/improvements.
 The baseline algorithm RandomAgent can be run as:\\
 \texttt{\\\$ cd src}
 \texttt{\\\$ python run\_random\_agent.py}\\\\
 Below plots shows the performance of random agent a) in terms of the reward earned per episode for 500 episodes and b) number of steps in each episode.\\\\
-\includegraphics[width=12cm,trim={0 0 0 0},clip]{img/randomagent}\\
+\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/randomagent}\\
 As expected the agent was not able to achieve rewards greater than $0$ in any of the episodes with mean reward under $-200.0$ indicating that the vehicle crashed in most cases. Another fact is that episode length in general is well below 200 steps. As a result of both these, the random agent low benchmark got a negative $M$-score of $-229.932$ which is same the expected episode reward.\\\\
 A high benchmark agent was built using Keras reinforcement library\cite{kerasrl}. For this benchmark a DQN was built with the following specifications:
 \vspace{-0.1cm}
@@ -63,10 +69,95 @@ A high benchmark agent was built using Keras reinforcement library\cite{kerasrl}
 	\item $\epsilon$-greedy policy was used while training with $\epsilon = 0.975$.
 \end{enumerate}
 Following plots show the test trial performance of this high benchmark agent which has an $M$-score of $0$ as per the metric design.\\\\
-\includegraphics[width=12cm,trim={0 0 0 0},clip]{img/highbenchmark_test_evaluation}\\
+\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/highbenchmark_test_evaluation}\\
 \section{Methodology}
 \subsection*{Data Processing}
+In \textit{Exploratory Visualization} section the mean and standard deviation of the state space components were determined using a random agent. These are used to normalize the state vectors in the agent before input to DQN network as:\\\\
+$s_{preprocessed} = \dfrac{s - mean(s)}{std.dev(s)}$
 \subsection*{Implementation}
+The repository for the project has 4 directories in its root directory :\\ 
+1) \texttt{src} : Contains all the source code for the project.\\
+2) \texttt{log} : This is where the results and plots from the various experiments in the project are stored.\\
+3) \texttt{monitor} : Contains the logs/video snapshots generated by gym package for different experiments.\\
+4) \texttt{params} : This directory stores the parameters that need to be persisted between experiments.\\\\
+The implementation of project comprises of 3 main modules :\\
+1) \textbf{Agent Module} - \texttt{agents.py}: This module contains python classes that implement every agent used in the project. The agent classes implemented are a) \texttt{RandomAgent} b) \texttt{DQNAgent}. Each of these classes have the following minimum interface :\\
+\hrule
+\begin{verbatim}
+class AgentInterface(object):
+    def __init__(self, **kw):
+        """ Takes the paramters of agent as input and initialize 
+            the underlying model if any. """
+        pass
+    def decide(self, curstate, testmode=False):
+        """ Accepts current state as input and returns action to take """
+        pass
+
+    def observe(self, prevstate, action, reward, curstate, done):
+        """ Accepts an observation (s,a,r,s',done) as input and the agent 
+            may memorize it for some time using a buffer for learning later """
+        pass
+
+    def learn(self):
+        """ When this gets called agent is supposed to learn from its 
+            experience buffer if any and return the training loss. """
+        pass
+\end{verbatim}
+\hrule
+\bigskip
+2) \textbf{Datalogger Module} - \texttt{datalogger.py} : This module gets statistics of each episode of an experiment, plots them in real-time and logs them to a csv file in the appropriate subdirectory of \texttt{log} directory. A brief description of the class \texttt{ExperimentLogger} in the datalogger module is shown below.\\
+\hrule
+\begin{verbatim}
+class ExperimentLogger(object):
+    """ Logs per-episode stats and produces a live reward,
+        loss, episode length plot """
+    def __init__(self, logdir, prefix, num_episodes, verbose=True):
+        """ Initialize the plots and log file. num_episode is the
+            number of episodes in both train and test phase """
+        pass
+    def log_episode(self, reward, loss, numsteps):
+        """ The logger get current episode reward, loss and episode 
+            length as input and it updates the live plot and data 
+            log file """
+        pass
+\end{verbatim}
+\hrule
+\bigskip
+2) \textbf{Experiments Module} - \texttt{experiments.py} : The experiments module takes the gym environment, the agent instances and the number of episodes as input. It creates two instances of dataloggers one for train phase and other for test phase. It has a run method in which specified number of episodes are run in test/train mode. During each episode, the gym env is used to get the current state and this is passed on to the agent. The agent then provide the action to take via its \texttt{decide()} method which is passed on to the gym env. Subsequently the new state and reward are obtained from the environment and passed on to the agent via its \texttt{observe()} method.\\\\
+Next the scripts used to evaluate each agent is shown :\\
+1) \textbf{Low Benchmark - Random agent} : This agent can be evaluated by running the following :
+\texttt{\\\$ cd src}
+\texttt{\\\$ python run\_random\_agent.py}\\
+On running the above the live plot window and gym's visualization are displayed.\\
+2) \textbf{High Benchmark} agent can be evaluated as :
+\texttt{\\\$ cd src}
+\texttt{\\\$ python run\_high\_benchmark.py}\\
+3) \textbf{Basic DQN} agent can be evaluated as :
+\texttt{\\\$ cd src}
+\texttt{\\\$ python run\_basic\_dqn.py}\\
+4) \textbf{Improved DQN} agent can be evaluated as :
+\texttt{\\\$ cd src}
+\texttt{\\\$ python run\_full\_dqn.py}
+\subsection*{Refinement}
+In this project a DQN agent implementation is made by only using Keras neural network library.\\
+1) In the first attempt a basic DQN agent is made with the following configuration : \\
+\indent - A neural network with 2 hidden layers each with 40 units with ReLU activation function.\\
+\indent - No separate target network used.\\
+\indent - Loss function used is mean squared error.\\
+\indent - Optimizer used is Adam with learning rate of $0.00025$.\\
+\indent - Buffer size for experience replay is $500000$ observations.\\
+\indent - Number of sample observations picked randomly from buffer is 32.\\
+\indent - Discount factor $\gamma = 0.99$\\
+\indent - $\epsilon$-Greedy policy is used for training with decay parameter of $0.975$\\\\
+2) An improved DQN agent was created by focusing on the two issues with basic DQN as discussed in \textit{Algorithms and Techniques} section. Some tuning of network size and learning rate was also done. The configuration of the Improved DQN agent is :\\
+\indent - A neural network with 2 hidden layers - 50 units in first layer and 40 units in second layer each with ReLU activation function.\\
+\indent - A target network of the same configuration as above was used with update rate of every $600$ steps.\\
+\indent - MSE loss function was replaced with Huber loss.\\
+\indent - Optimizer used is Adam with learning rate of $0.0005$\\
+\indent - Buffer size for experience replay is $500000$ observations.\\
+\indent - Number of sample observations picked randomly from buffer is 32.\\
+\indent - Discount factor $\gamma = 0.99$.\\
+\indent - $\epsilon$-Greedy policy is used for training with decay parameter of $0.975$\\
 \section{Results}
 \section{Conclusion}
 \begin{thebibliography}{}
