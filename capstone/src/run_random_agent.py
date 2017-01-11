@@ -44,6 +44,6 @@ print std
 pickle.dump( (mean, std), open( "../params/state-stats.pkl", "wb" ) )
 
 fig.savefig('../log/state-space.png')
-evaluate('../monitor/LunarLander_RandomAgent-1_data.csv', '../monitor/LunarLander_RandomAgent-1_evaluation.png', 'Low Benckmark')
+evaluate('../log/LunarLander_RandomAgent-1_train_data.csv', '../log/LunarLander_RandomAgent-1_evaluation.png', 'Low Benckmark')
 
 plt.show()
