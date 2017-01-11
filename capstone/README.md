@@ -10,5 +10,31 @@
 * numpy
 * OpenAI's gym [package](https://github.com/openai/gym)
 * Keras with tensorflow or theano
+* Keras-rl [package](https://github.com/matthiasplappert/keras-rl) - required for running the high benchmark agent.
 
+## Setting up the project :
+
+```
+$ git clone https://github.com/matthiasplappert/keras-rl.git
+$ git clone https://github.com/dennisfrancis/udacity-ml-nd
+$ cd udacity-ml-nd/capstone/src
+$ ln -s ../../../keras-rl/rl rl
+```
+
+## Running the agents
+
+```bash
+$ cd src                          # Go to source code directory
+
+$ python run_random_agent.py      # To run random agent or low benchmark
+
+$ python run_high_benchmark.py    # To run high benchmark agent
+
+$ python run_basic_dqn.py         # To run basic DQN agent
+
+$ python run_full_dqn.py          # To run improved DQN agent
+```
+
+## Logs and plots
+Logs and plots are in `log` dir under the `capstone` subdir.
 
