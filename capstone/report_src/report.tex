@@ -1,6 +1,10 @@
 
 \documentclass{article}
-\usepackage {graphicx, amsmath, amsfonts, algorithm, algorithmic, multirow}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage {graphicx, amsmath, amsfonts, multirow}
+\usepackage{float}
+\usepackage{hyperref}
 \setlength{\topmargin}{-2cm}
 \setlength{\oddsidemargin}{0cm}
 \setlength{\textheight}{24cm}
@@ -33,8 +37,12 @@ By evaluating the high benchmark agent $\psi$ is set to $0.00647582$ in order to
 \subsection*{Data Exploration}
 The state space is $\mathbb{R}^8$. The first two dimensions indicate the coordinates of the vehicle. Third and fourth dimensions indicate x and y components of the velocity of the vehicle. Fifth component specifies angle between lander pad and the vehicle base. Sixth component gives the angular velocity with respect to lander pad. Seventh and eighth dimensions indicate whether the legs of the vehicle has made ground contact or not. There are four discrete actions that the agent can make in one step : \{ \texttt{do nothing, fire left orientation engine, fire main engine, fire right orientation engine} \}.The vehicle always starts at top middle of the screen in every episode and the lander pad is always at coordinates (0,0). The episode ends when the vehicle reaches any of its end states : 1) lands on the landing pad with zero speed 2) vehicle crashes. It is assumed that state observation made by the agent is accurate however no assumption is made as to whether the state transition is deterministic with respect to any action made by the agent.
 \subsection*{Exploratory Visualization}
-Following bar-charts show the mean and standard deviation of the 8 state space components in an experiment where a random action was chosen in each step per episode for 500 such episodes.\\
-\includegraphics[width=11cm]{img/state-space}\\
+\textit{Figure 1} depicts the mean and standard deviation of the 8 state space components in an experiment where a random action was chosen in each step per episode for 500 such episodes.\\
+\begin{figure}[H]
+	\caption{Mean and Standard deviation of the state components determined using random exploration experiment}
+	\centering
+	\includegraphics[width=11cm]{img/state-space}
+\end{figure}
 The bar-charts indicate that the y coordinate(index 1) of the vehicle and y component of velocity(index 3) have their mean away from 0 while all other components have mean close to 0. Second plot indicate relatively higher standard deviation in x component of the vehicle's velocity and lower value for last two components of state space.
 \subsection*{Algorithms and Techniques}
 The problem at hand is a good case for using Reinforcement Learning approach. Q-learning is one of the algorithms in reinforcement learning but is limited to problems with discrete state and action spaces. In this case the state space is 8 dimensional and continuous. Discretization of state space is inefficient and the memory requirement grows exponentially with number of discrete units chosen per state dimension. This project make use of a relatively recent technique called Deep Q Network(DQN)\cite{DQN} which is thoroughly explained in the blog by Jaromir Janisch\cite{Jaromir}. DQN uses a neural network that learns to approximate the function 
@@ -55,21 +63,29 @@ An agent which chooses random action every step is chosen as the baseline algori
 The baseline algorithm RandomAgent can be run as:\\
 \texttt{\\\$ cd src}
 \texttt{\\\$ python run\_random\_agent.py}\\\\
-Below plots shows the performance of random agent a) in terms of the reward earned per episode for 500 episodes and b) number of steps in each episode.\\\\
-\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/randomagent}\\
+\textit{Figure 2} shows the performance of random agent a) in terms of the reward earned per episode for 500 episodes and b) number of steps in each episode.
+\begin{figure}[H]
+	\caption{Test performance plot of Random agent(Low benchmark)}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/randomagent}
+\end{figure}
 As expected the agent was not able to achieve rewards greater than $0$ in any of the episodes with mean reward under $-200.0$ indicating that the vehicle crashed in most cases. Another fact is that episode length in general is well below 200 steps. As a result of both these, the random agent low benchmark got a negative $M$-score of $-229.932$ which is same the expected episode reward.\\\\
 A high benchmark agent was built using Keras reinforcement library\cite{kerasrl}. For this benchmark a DQN was built with the following specifications:
 \vspace{-0.1cm}
 \begin{enumerate}
 	\item A neural network with 2 hidden layers each with 40 nodes.
-	\item Each hidden layer is followed by a \textit{Rectified Linear} activation layer.
+	\item Each hidden layer is followed by a \textit{Rectified Linear} activation (ReLU) layer.
 	\item Output layer has a linear activation function with mean squared error as loss function.
 	\item Adam optimizer with learning rate of $0.002$ with decay parameter of $2.25\times10^{-5}$ is used.
 	\item Soft target model update is done with parameter $0.01$.
 	\item $\epsilon$-greedy policy was used while training with $\epsilon = 0.975$.
 \end{enumerate}
-Following plots show the test trial performance of this high benchmark agent which has an $M$-score of $0$ as per the metric design.\\\\
-\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/highbenchmark_test_evaluation}\\
+\textit{Figure 3} show the test trial performance of this high benchmark agent which has an $M$-score of $0$ as per the metric design.
+\begin{figure}[H]
+	\caption{Test performance plot of High benchmark agent}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/highbenchmark_test_evaluation}
+\end{figure}	
 \section{Methodology}
 \subsection*{Data Processing}
 In \textit{Exploratory Visualization} section the mean and standard deviation of the state space components were determined using a random agent. These are used to normalize the state vectors in the agent before input to DQN network as:\\\\
@@ -159,18 +175,100 @@ In this project a DQN agent implementation is made by only using Keras neural ne
 \indent - Discount factor $\gamma = 0.99$.\\
 \indent - $\epsilon$-Greedy policy is used for training with decay parameter of $0.975$\\
 \section{Results}
+\subsection*{Model Evaluation and Validation}
+1) \textbf{Basic DQN agent}\\
+The following plots show the variation of episode reward, total episode loss and episode length for each of the 500 training episodes conducted for Basic DQN agent.
+\begin{figure}[H]
+	\caption{Train performance plot of Basic DQN Agent}
+	\centering
+	\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/basicdqn_train}
+\end{figure}
+From the top plot of reward from episodes 100 to 200, the agent learned somewhat to avoid crashes (reward $> -200$), but has a lot a variance in the episode reward. After that point the agent fails to improve any further. The instability of the agent's network can be seen from the big fluctuations after episode 300 where performance decreases. At the end (episode 500) the mean reward goes down to less that 0.
+The below figure shows the episode reward and episode length plot for Basic DQN agent in test phase of 500 episodes.
+\begin{figure}[H]
+	\caption{Test performance plot of Basic DQN Agent}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/basicdqn}
+\end{figure}
+The key statistics of the test phase run of the agent are
+\begin{align*}
+\mathbf{E}[R] &= -26.39432\\ \sqrt{\mathbf{Var}[R]} &= 149.82994\\\mathbf{E}[N] &= 569.70000\\ M\text{-score} &= -26.39432
+\end{align*}
+While this agent is better than Random agent or Low benchmark, it is clearly poorer in performance(negative $M$-score) compared to the High benchmark owing to low expected reward in test phase.\\\\
+2) \textbf{Improved DQN agent}\\
+In improved DQN agent the main changes involved are a) usage of a target network to generate training examples during experience replay b) usage of Huber loss instead of mean squared error loss. As explained in \textit{Algorithms and Techniques} section these changes improve the stability of the agent network. The number of neurons in the first hidden layer is increased to 50 from 40 to increase the capacity of the network. The learning rate is increased from $0.00025$ to $0.0005$ to learn faster and reach acceptable performance by the end of training phase. Both these changes are made after doing a few ad-hoc experimental runs.\\\\
+Following plots indicate the performance of Improved DQN in the training phase.
+\begin{figure}[H]
+	\caption{Train performance plot of Improved DQN Agent}
+	\centering
+	\includegraphics[width=15cm,trim={0 0 0 0},clip]{img/fulldqn_train}
+\end{figure}
+Compared to Basic DQN agent, the improved version's train performance does not deteriorate significantly after it attains acceptable expected rewards after episode 300. There is still some variance in the episode reward curve owing to $\epsilon$-greedy policy being followed. This becomes clear when this performance plot is compared to the \textit{test phase} results. The loss plot points out that the episode loss is decaying with episode and its variance is also reduced as training proceeds.\\\\
+The figure below shows the \textit{test phase} performance of the Improved DQN agent.
+\begin{figure}[H]
+	\caption{Test performance plot of Improved DQN Agent}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/fulldqn}
+\end{figure}
+The top plot shows that the agent constantly maintains 100-episode rolling average reward of above $+200$ with a standard deviation less than $50.0$. The episode length plot shows that there are fewer episodes when the number of steps were truncated at 1000 steps compared to basic DQN agent. The key statistics of the improved agent in test phase are
+\begin{align*}
+\mathbf{E}[R] &= 206.85704\\ \sqrt{\mathbf{Var}[R]} &= 42.19569\\\mathbf{E}[N] &= 334.12600\\ M\text{-score} &= 2.73859
+\end{align*}
+As the M-score indicate, the Improved DQN agent is better than Basic DQN agent and High benchmark in all of the above key measures.
+\subsection*{Justification}
+The improved DQN agent is the agent with best M-score compared to Random agent(low benchmark), High benchmark agent and Basic DQN agent. The following table summarizes the \textit{test} results of all agents.\\\\
+\csvautobooktabular{data/summary.csv}\\\\
+The Improved DQN agent has the highest expected episode reward and the least standard deviation of episode rewards. It also requires only fewer expected number of steps to complete the episode. All of these numbers are summarized by the M-scores where Improved DQN agent has the highest value of $2.73859$.
 \section{Conclusion}
+\subsection*{Free-Form Visualization}
+\begin{figure}[H]
+	\caption{A set of histograms of episode rewards for High benchmark, Low benchmark, Basic DQN agent and Improved DQN agent. The green vertical dashed lines indicate the mean and red lines indicate the mean $\pm$ std.dev}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/ffviz_er}
+\end{figure}
+\textit{Figure 8} shows that the Improved DQN agent's distribution of episode rewards is more peaked and has less mass in its left tail. However it also suggest room for more improvement in the agent possibly by further tuning of its parameters.
+\begin{figure}[H]
+	\caption{A set of histograms of episode lengths for High benchmark, Low benchmark, Basic DQN agent and Improved DQN agent. The green vertical dashed lines indicate the mean and red lines indicate the mean $\pm$ std.dev}
+	\centering
+	\includegraphics[width=13cm,trim={0 0 0 0},clip]{img/ffviz_en}
+\end{figure}
+\textit{Figure 9} points out that Improved DQN agent's episode length distribution is more peaked at a smaller episode length and has lesser mass in its right tail. Here the right tail at episode length of 1000 is due to the agents inability to land correctly within 1000 steps, so this is another possible area of improvement.
+\subsection*{Reflection}
+Following is a summary of how the project was developed:
+\begin{enumerate}
+	\item A problem involving reinforcement learning was selected from OpenAI's gym package.
+	\item The state space was explored using a random exploration agent.
+	\item A low and high benchmark agent were determined for the problem.
+	\item A metric was designed based on the characteristics of the problem and with reference to the high benchmark.
+	\item A live real-time performance visualization system was developed for all agents.
+	\item A basic DQN agent was implemented just using Keras deep learning library.
+	\item The basic agent was evaluated on its test runs.
+	\item Improved version of DQN agent was implemented by generalizing the code for basic DQN agent.
+	\item Several ad-hoc trials were carried out to coarse tune the parameters of improved DQN to get acceptable test performance.
+	\item Improved DQN agent was evaluated on its test runs.
+\end{enumerate}
+Live visualization of agent performance was very helpful in determining the learning characteristics of an agent early on instead of waiting till the end of all episodes to get the metric or going through the logs of the experiments. It was very important to fix the right metric early on, to capture the measure of a real world agent performance. Implementing, debugging and refining the DQN agent using Keras deep learning library was the most interesting and challenging work in the project.
+\subsection*{Improvement}
+Apart from improving the agent by fine tuning of the parameters, the stability and learning speed of the DQN agent can be improved by using Double DQN\cite{doubleq} and Prioritized experience replay\cite{prio}. Double DQN improves the stability of learning by improving upon the tendency of DQN agent to overestimate the Q-function due to the maximization operation used in the formula for finding the targets. DQN agent learns by picking random samples from past experiences. The idea of prioritized experience replay is that the agent can learn more from certain sets of observations than others, and hence it tries to do that by changing the sampling distribution based on the DQN network error for each sample/observation. Both these ideas could be used to further improve the performance of the agent. Apart from these ideas, a different approach using Deep Deterministic Policy Gradient\cite{DDPG} algorithm could be used. A good introduction to DDPG is made in the blog\cite{DDPGblog} by Patrick Emami.
 \begin{thebibliography}{}
 \bibitem{challenge}
-LunarLander-v2 gym environment provided by OpenAI - \texttt{https://gym.openai.com/envs/LunarLander-v2}
+LunarLander-v2 gym environment provided by OpenAI\\ \texttt{https://gym.openai.com/envs/LunarLander-v2}
 \bibitem{DQN}
 Mnih, Volodymyr, et al. "Human-level control through deep reinforcement learning." Nature 518.7540 (2015): 529-533.
 \bibitem{Jaromir}
-Let’s make a DQN - blog series by Jaromir Janisch - \texttt{https://jaromiru.com/2016/09/27/lets-make-a-dqn-theory/}
+Let’s make a DQN - blog series by Jaromir Janisch\\\texttt{https://jaromiru.com/2016/09/27/lets-make-a-dqn-theory/}
 \bibitem{adam}
 Kingma, Diederik, and Jimmy Ba. "Adam: A method for stochastic optimization." arXiv preprint arXiv:1412.6980 (2014).
 \bibitem{kerasrl}
-Deep Reinforcement Learning for Keras - \texttt{https://github.com/matthiasplappert/keras-rl}
+Deep Reinforcement Learning for Keras\\\texttt{https://github.com/matthiasplappert/keras-rl}
+\bibitem{prio}
+Schaul, Tom, et al. "Prioritized experience replay." arXiv preprint arXiv:1511.05952 (2015).
+\bibitem{doubleq}
+Van Hasselt, Hado, Arthur Guez, and David Silver. "Deep reinforcement learning with double Q-learning." CoRR, abs/1509.06461 (2015).
+\bibitem{DDPG}
+Lever, Guy. "Deterministic policy gradient algorithms." (2014).\\\texttt{http://jmlr.org/proceedings/papers/v32/silver14.pdf}
+\bibitem{DDPGblog}
+Blog on Deep Deterministic Policy Gradients in TensorFlow by Patrick Emami at\\\texttt{http://pemami4911.github.io/blog/2016/08/21/ddpg-rl.html}
 \end{thebibliography}
 
 \end{document}
