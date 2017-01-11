@@ -42,3 +42,4 @@ def evaluate(datafile, plotfname, agentname):
     plt.subplots_adjust(top=0.92)
     #print "psi = %.5f" % (1.0/score)
     fig.savefig(plotfname)
+    return er, stdr, en, score
