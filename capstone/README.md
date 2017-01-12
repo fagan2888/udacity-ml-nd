@@ -10,6 +10,8 @@
 * numpy
 * OpenAI's gym [package](https://github.com/openai/gym)
 * Keras with tensorflow or theano
+
+### Soft dependency - no need to install in the standard way
 * Keras-rl [package](https://github.com/matthiasplappert/keras-rl) - required for running the high benchmark agent.
 
 ## Setting up the project :
@@ -17,8 +19,10 @@
 ```
 $ git clone https://github.com/matthiasplappert/keras-rl.git
 $ git clone https://github.com/dennisfrancis/udacity-ml-nd
-$ cd udacity-ml-nd/capstone/src
-$ ln -s ../../../keras-rl/rl rl
+$ cd keras-rl
+$ git am < ../udacity-ml-nd/capstone/keras-rl-testrun-fix.patch   # Apply a patch for keras-rl to work with the project
+$ cd ../udacity-ml-nd/capstone/src
+$ ln -s ../../../keras-rl/rl rl   # create a symlink to rl dir of keras-rl to the capstone's src dir
 ```
 
 ## Running the agents
