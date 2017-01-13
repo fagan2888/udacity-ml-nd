@@ -30,6 +30,8 @@ $ ln -s ../../../keras-rl/rl rl   # create a symlink to rl dir of keras-rl to th
 ```bash
 $ cd src                          # Go to source code directory
 
+$ rm -rf ../monitor               # Required only if you have run some of the agents before
+
 $ python run_random_agent.py      # To run random agent or low benchmark
 
 $ python run_high_benchmark.py    # To run high benchmark agent
