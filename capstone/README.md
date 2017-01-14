@@ -16,12 +16,17 @@
 
 ## Setting up the project :
 
-```
+```bash
 $ git clone https://github.com/matthiasplappert/keras-rl.git
+
 $ git clone https://github.com/dennisfrancis/udacity-ml-nd.git
+
 $ cd keras-rl
+
 $ git am < ../udacity-ml-nd/capstone/keras-rl-testrun-fix.patch   # Apply a patch for keras-rl to work with the project
+
 $ cd ../udacity-ml-nd/capstone/src
+
 $ ln -s ../../../keras-rl/rl rl   # create a symlink to rl dir of keras-rl to the capstone's src dir
 ```
 
